@@ -1,6 +1,10 @@
 # Prerequisites
 *.d
 
+# Test data
+*.bin
+*.txt
+
 # Compiled Object files
 *.slo
 *.lo
@@ -30,3 +34,7 @@
 *.exe
 *.out
 *.app
+make_bwt
+
+#vscode
+.vscode
