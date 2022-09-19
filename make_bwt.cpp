@@ -3,6 +3,15 @@
 #include <fstream>
 
 #include "include/reader.hpp"
+#include "include/block_rlbwt_builder.hpp"
+#include "include/byte_block.hpp"
+#include "include/simple_rlbwt.hpp"
+
+static const constexpr uint32_t BLOCK_SIZE = 1 << 12;
+
+typedef bbwt::byte_block block;
+typedef bbwt::simple_rlbwt<block, BLOCK_SIZE> rlbwt;
+typedef bbwt::block_rlbwt_builder<block, BLOCK_SIZE, rlbwt> builder;
 
 void help() {
     std::cout << "Create RLBWT data structure and output it to file.\n\n";
@@ -10,7 +19,7 @@ void help() {
     std::cout << "   <out_file>     Path to file to write output to.\n";
     std::cout << "   -i file_name   File containing text to encode. (overrides -h and -r.)\n";
     std::cout << "   -h heads       File containing run heads as bytes.\n";
-    std::cout << "   -r runs        File containing run lengths ad 32-bit integers.\n\n";
+    std::cout << "   -r runs        File containing run lengths as 32-bit integers.\n\n";
     std::cout << "Ouput file is required.\n"
               << "If no input file is given, input will be read from standard input.\n"
               << "If file_name is given, input will be read as a byte-stream from file.\n"
@@ -42,11 +51,14 @@ int main(int argc, char const* argv[]) {
     if (out_file_loc == 0) {
         std::cerr << "output file is required" << std::endl;
     }
+    builder b;
+    uint64_t size = 0;
     if (in_file_loc) {
         std::ifstream in(argv[in_file_loc]);
         bbwt::file_reader reader(&in);
         for (auto it : reader) {
-            std::cout << it.head << ", " << it.length << std::endl;
+            b.append(it.head, it.length);
+            size += it.length;
         }
     } else if (runs_loc || heads_loc) {
         if (runs_loc == 0 && heads_loc == 0) {
@@ -55,14 +67,20 @@ int main(int argc, char const* argv[]) {
         }
         bbwt::multi_reader reader(std::fopen(argv[heads_loc], "rb"), std::fopen(argv[runs_loc], "rb"));
         for (auto it : reader) {
-            std::cout << it.head << ", " << it.length << std::endl;
+            b.append(it.head, it.length);
+            size += it.length;
         }
     } else {
         bbwt::file_reader reader(&std::cin);
         for (auto it : reader) {
-            std::cout << it.head << ", " << it.length << std::endl;
+            b.append(it.head, it.length);
+            size += it.length;
         }
     }
-
+    rlbwt bwt = b.compile();
+    for (uint64_t i = 0; i < size; i++) {
+        bwt.at(i);
+    }
+    std::cout << std::endl;
     return 0;
 }
