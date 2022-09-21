@@ -19,45 +19,37 @@ class byte_block {
         head_offset_ = heads.size();
         std::memcpy(data_, heads.data(), heads.size());
         std::memcpy(data_ + heads.size(), runs.data(), runs.size());
-        std::cerr << "made block with heads\n";
-        for (uint32_t i = 0; i < head_offset_; i++) {
-            std::cerr << char(data_[i]);
-        }
-        std::cerr << std::endl;
     }
 
     byte_block() : data_(nullptr), head_offset_(0), size_(0) {}
 
-    byte_block(const byte_block& other) {
-        size_ = other.size_;
-        data_ = new uint8_t[size_];
-        head_offset_ = other.head_offset_;
-        std::memcpy(data_, other.data_, size_);
-    }
+    byte_block(const byte_block& other) = delete;
 
     byte_block(byte_block&& other)
         : data_(std::exchange(other.data_, nullptr)),
           head_offset_(std::exchange(other.head_offset_, 0)),
           size_(std::exchange(other.size_, 0)) {}
 
-    ~byte_block() { delete[] data_; }
+    ~byte_block() {
+        delete[] data_; 
+    }
 
     byte_block& operator=(byte_block&& other) {
-        std::exchange(other.data_, data_);
-        std::exchange(other.head_offset_, head_offset_);
-        std::exchange(other.size_, size_);
+        data_ = std::exchange(other.data_, nullptr);
+        head_offset_ = std::exchange(other.head_offset_, 0);
+        size_ = std::exchange(other.size_, 0);
         return *this;
     }
 
+    byte_block& operator=(const byte_block&) =delete;
+
     uint8_t at(uint32_t location) {
-        std::cerr << "at(" << location << ") called" << std::endl;
         uint32_t head_i = 0;
         uint32_t run_i = head_offset_;
         while (true) {
             uint8_t c = data_[head_i++];
             uint32_t rl = read(run_i);
-            std::cerr << " run " << head_i << " of " << rl << " '" << char(c) << "' characters" << std::endl;
-            if (location > rl) {
+            if (location >= rl) {
                 location -= rl;
             } else {
                 return c;

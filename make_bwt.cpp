@@ -79,7 +79,7 @@ int main(int argc, char const* argv[]) {
     }
     rlbwt bwt = b.compile();
     for (uint64_t i = 0; i < size; i++) {
-        bwt.at(i);
+        std::cout << char(bwt.at(i));
     }
     std::cout << std::endl;
     return 0;
