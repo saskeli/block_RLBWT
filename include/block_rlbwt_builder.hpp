@@ -89,8 +89,10 @@ class block_rlbwt_builder {
         std::FILE* out = std::fopen(prefix_ + "_" + block_counts_.size() + suffix_, "wb");
         uint64_t n_blocks = 1;
         std::fwrite(&n_blocks, sizeof(uint64_t), 1, out);
+        super_block_bytes_ += sizeof(uint64_t) * block_offsets_.size();
         std::fwrite(&super_block_bytes_, sizeof(uint64_t), 1, out);
-        std::fwrite(&current_super_block_, sizeof(uint8_t), super_block_bytes_, out);
+        std::fwrite(block_offsets_.data(), sizeof(uint64_t), block_offsets_.size(), out)
+        std::fwrite(current_super_block_, sizeof(uint8_t), super_block_bytes_, out);
         block_counts_.push_back(super_block_cumulative_);
     }
 
@@ -104,6 +106,7 @@ class block_rlbwt_builder {
             std::memset(current_super_block_ + super_block_size_, 0, new_size - super_block_size_);
             super_block_size_ = new_size;
         }
+        block_offsets_.push_back(super_block_bytes_);
         std::memcpy(current_super_block_ + super_block_bytes_, &current_block_, sizeof(bwt_type::block_type));
         bwt_type::block_type* b = reinterpret_cast<bwt_type::block_type*>(current_super_block_ + super_block_bytes_);
         b->commit(scratch_);
