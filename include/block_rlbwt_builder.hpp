@@ -10,18 +10,22 @@ class block_rlbwt_builder {
     static const constexpr uint64_t SUPER_BLOCK_LIMIT = uint64_t(1) << 32;
     static const constexpr uint64_t BLOCKS_IN_SUPER_BLOCK = SUPER_BLOCK_LIMIT / bwt_type::cap;
 
+    typedef bwt_type::alphabet_type alphabet_type;
+    typedef bwt_type::block_alphabet_type block_alphabet_type;
+    typedef bwt_type::block_type block_type;
+
     std::string prefix_;
     std::string suffix_;
-    std::vector<bwt_type::alphabet_type> block_counts_;
-    bwt_type::alphabet_type super_block_cumulative_;
+    std::vector<alphabet_type> block_counts_;
+    alphabet_type super_block_cumulative_;
     std::vector<uint64_t> block_offsets_;
-    bwt_type::alphabet_type<bwt_type::cap> block_cumulative_;
+    block_alphabet_type block_cumulative_;
     uint64_t super_block_bytes_;
     uint64_t super_block_size_;
     uint64_t elems_;
     uint8_t* current_super_block_;
     uint8_t** scratch_;
-    bwt_type::block_type current_block_;
+    block_type current_block_;
     uint32_t block_elems_;
     uint32_t block_bytes_;
     uint32_t blocks_in_super_block_;
@@ -36,33 +40,33 @@ class block_rlbwt_builder {
             prefix_ = out_file.substr(0, loc);
             suffix_ = out_file.substr(loc);
         }
-        block_counts_ = std::vector<bwt_type::alphabet_type>();
-        super_block_cumulative_ = bwt_type::alphabet_type();
+        block_counts_ = std::vector<alphabet_type>();
+        super_block_cumulative_();
         block_counts_.push_back(super_block_cumulative_);
         block_offsets_ = std::vector<uint64_t>();
-        block_cumulative_ = bwt_type::alphabet_type<bwt_type::cap>();
-        super_block_bytes_ = sizeof(bwt_type::alphabet_type);
-        super_block_size_ = BLOCKS_IN_SUPER_BLOCK * (bwt_type::block_type::min_size() + sizeof(bwt_type::alphabet_type<bwt_type::cap>));
+        block_cumulative_();
+        super_block_bytes_ = sizeof(alphabet_type);
+        super_block_size_ = BLOCKS_IN_SUPER_BLOCK * (block_type::min_size + sizeof(block_alphabet_type));
         elems_ = 0;
-        current_super_block_ = (uint64_t*)calloc(super_block_size_, 1);
-        scratch_ = (uint8_t**)malloc(bwt_type::block_type::scratch_blocks() * sizeof(uint8_t*));
-        for (size_t i = 0; i < bwt_type::block_type::scratch_blocks(); i++) {
-            scratch_[i] = (uint8_t*)calloc(bwt_type::block_type::scratch_size(i), 1);
+        current_super_block_ = (uint8_t*)calloc(super_block_size_, 1);
+        scratch_ = (uint8_t**)malloc(block_type::scratch_blocks * sizeof(uint8_t*));
+        for (size_t i = 0; i < block_type::scratch_blocks; i++) {
+            scratch_[i] = (uint8_t*)calloc(block_type::scratch_size(i), 1);
         }
-        current_block_ = bwt_type::block_type();
+        current_block_ = block_type();
         block_elems_ = 0;
         block_bytes_ = sizeof(block_type);
         blocks_in_super_block_ = 0;
     }
 
     void append(uint8_t head, uint32_t length) {
-        if (length + block_elems_ < cap) [[likely]] {
+        if (length + block_elems_ < bwt_type::cap) [[likely]] {
             block_cumulative_.add(head, length);
             super_block_cumulative_.add(head, length);
             block_bytes_ += current_block_.append(head, length, scratch_);
             block_elems_ += length;
             elems_ += length;
-        } else if (length + block_elems_ == cap) [[unlikely]] {
+        } else if (length + block_elems_ == bwt_type::cap) [[unlikely]] {
             block_cumulative_.add(head, length);
             super_block_cumulative_.add(head, length);
             block_bytes_ += current_block_.append(head, length, scratch_);
@@ -86,45 +90,54 @@ class block_rlbwt_builder {
     }
   private:
     void write_super_block() {
-        std::FILE* out = std::fopen(prefix_ + "_" + block_counts_.size() + suffix_, "wb");
-        uint64_t n_blocks = 1;
-        std::fwrite(&n_blocks, sizeof(uint64_t), 1, out);
-        super_block_bytes_ += sizeof(uint64_t) * block_offsets_.size();
-        std::fwrite(&super_block_bytes_, sizeof(uint64_t), 1, out);
-        std::fwrite(block_offsets_.data(), sizeof(uint64_t), block_offsets_.size(), out)
+        std::FILE* out = std::fopen((prefix_ + "_" + std::to_string(block_counts_.size()) + suffix_).c_str(), "wb");
+        uint64_t file_bytes = super_block_bytes_ + sizeof(uint64_t) * bwt_type::super_block_type::blocks;
+        std::fwrite(&file_bytes, sizeof(uint64_t), 1, out);
+        std::fwrite(block_offsets_.data(), sizeof(uint64_t), block_offsets_.size(), out);
+        for (uint64_t i = block_offsets_.size(); i < bwt_type::super_block_type::blocks; i++) {
+            uint64_t zero = 0;
+            std::fwrite(&zero, sizeof(uint64_t), 1, out);
+        }
         std::fwrite(current_super_block_, sizeof(uint8_t), super_block_bytes_, out);
         block_counts_.push_back(super_block_cumulative_);
+        std::fclose(out);
     }
 
     void commit(bool last_block = false) {
         if (super_block_bytes_ + block_bytes_ > super_block_size_) {
             uint64_t new_size = super_block_bytes_ + block_bytes_;
             if (!last_block) {
-                new_size += (BLOCKS_IN_SUPER_BLOCK - blocks_in_super_block_ - 1) * (bwt_type::block_type::min_size() + sizeof(bwt_type::alphabet_type<bwt_type::cap>))
+                new_size += (BLOCKS_IN_SUPER_BLOCK - blocks_in_super_block_ - 1) * (block_type::min_size + sizeof(block_alphabet_type));
             }
             current_super_block_ = (uint8_t*)realloc(current_super_block_, new_size);
             std::memset(current_super_block_ + super_block_size_, 0, new_size - super_block_size_);
             super_block_size_ = new_size;
         }
         block_offsets_.push_back(super_block_bytes_);
-        std::memcpy(current_super_block_ + super_block_bytes_, &current_block_, sizeof(bwt_type::block_type));
-        bwt_type::block_type* b = reinterpret_cast<bwt_type::block_type*>(current_super_block_ + super_block_bytes_);
+        std::memcpy(current_super_block_ + super_block_bytes_, &current_block_, sizeof(block_type));
+        block_type* b = reinterpret_cast<block_type*>(current_super_block_ + super_block_bytes_);
         b->commit(scratch_);
         block_offsets_.push_back(super_block_bytes_);
         super_block_bytes_ += block_bytes_;
-        for (size_t i = 0; i < bwt_type::block_type::scratch_blocks(); i++) {
-            std::memset(scratch_[i], 0, bwt_type::block_type::scratch_size(i));
+        for (size_t i = 0; i < block_type::scratch_blocks; i++) {
+            std::memset(scratch_[i], 0, block_type::scratch_size(i));
         }
-        std::memset(&current_block_, 0, sizeof(bwt_type::block_type));
+#pragma GCC diagnostic ignored "-Wclass-memaccess"
+        std::memset(&current_block_, 0, sizeof(block_type));
+#pragma GCC diagnostic pop
         block_elems_ = 0;
-        block_bytes_ = sizeof(bwt_type::block_type);
+        block_bytes_ = sizeof(block_type);
         blocks_in_super_block_++;
         if (!last_block && blocks_in_super_block_ < BLOCKS_IN_SUPER_BLOCK) [[likely]] {
-            std::memcpy(current_super_block_ + super_block_bytes_, &block_cumulative_, sizeof(bwt_type::alphabet_type<bwt_type::cap>));
-            super_block_bytes_ += sizeof(bwt_type::alphabet_type<bwt_type::cap>);
+            std::memcpy(current_super_block_ + super_block_bytes_, &block_cumulative_, sizeof(block_alphabet_type));
+            super_block_bytes_ += sizeof(block_alphabet_type);
         } else {
             write_super_block();
         }
+    }
+
+    void write_root() {
+
     }
 };    
 } // namespace bbwt

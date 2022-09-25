@@ -5,13 +5,18 @@
 #include "include/reader.hpp"
 #include "include/block_rlbwt_builder.hpp"
 #include "include/byte_block.hpp"
-#include "include/simple_rlbwt.hpp"
+#include "include/block_rlbwt.hpp"
+#include "include/byte_alphabet.hpp"
+#include "include/super_block.hpp"
 
 static const constexpr uint32_t BLOCK_SIZE = 1 << 12;
 
-typedef bbwt::byte_block block;
-typedef bbwt::simple_rlbwt<block, BLOCK_SIZE> rlbwt;
-typedef bbwt::block_rlbwt_builder<block, BLOCK_SIZE, rlbwt> builder;
+typedef bbwt::byte_alphabet<uint32_t> block_alphabet;
+typedef bbwt::byte_alphabet<uint64_t> super_block_alphabet;
+typedef bbwt::byte_block<BLOCK_SIZE, block_alphabet> block;
+typedef bbwt::super_block<block, block_alphabet> s_block;
+typedef bbwt::block_rlbwt<s_block, super_block_alphabet> rlbwt;
+typedef bbwt::block_rlbwt_builder<rlbwt> builder;
 
 void help() {
     std::cout << "Create RLBWT data structure and output it to file.\n\n";
@@ -51,7 +56,7 @@ int main(int argc, char const* argv[]) {
     if (out_file_loc == 0) {
         std::cerr << "output file is required" << std::endl;
     }
-    builder b;
+    builder b(argv[out_file_loc]);
     uint64_t size = 0;
     if (in_file_loc) {
         std::ifstream in(argv[in_file_loc]);
@@ -77,10 +82,6 @@ int main(int argc, char const* argv[]) {
             size += it.length;
         }
     }
-    rlbwt bwt = b.compile();
-    for (uint64_t i = 0; i < size; i++) {
-        std::cout << char(bwt.at(i));
-    }
-    std::cout << std::endl;
+    b.finalize();
     return 0;
 }
