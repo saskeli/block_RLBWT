@@ -14,7 +14,7 @@ static const constexpr uint32_t BLOCK_SIZE = 1 << 12;
 typedef bbwt::byte_alphabet<uint32_t> block_alphabet;
 typedef bbwt::byte_alphabet<uint64_t> super_block_alphabet;
 typedef bbwt::byte_block<BLOCK_SIZE, block_alphabet> block;
-typedef bbwt::super_block<block, block_alphabet> s_block;
+typedef bbwt::super_block<block> s_block;
 typedef bbwt::block_rlbwt<s_block, super_block_alphabet> rlbwt;
 typedef bbwt::block_rlbwt_builder<rlbwt> builder;
 
@@ -57,13 +57,11 @@ int main(int argc, char const* argv[]) {
         std::cerr << "output file is required" << std::endl;
     }
     builder b(argv[out_file_loc]);
-    uint64_t size = 0;
     if (in_file_loc) {
         std::ifstream in(argv[in_file_loc]);
         bbwt::file_reader reader(&in);
         for (auto it : reader) {
             b.append(it.head, it.length);
-            size += it.length;
         }
     } else if (runs_loc || heads_loc) {
         if (runs_loc == 0 && heads_loc == 0) {
@@ -73,13 +71,11 @@ int main(int argc, char const* argv[]) {
         bbwt::multi_reader reader(std::fopen(argv[heads_loc], "rb"), std::fopen(argv[runs_loc], "rb"));
         for (auto it : reader) {
             b.append(it.head, it.length);
-            size += it.length;
         }
     } else {
         bbwt::file_reader reader(&std::cin);
         for (auto it : reader) {
             b.append(it.head, it.length);
-            size += it.length;
         }
     }
     b.finalize();

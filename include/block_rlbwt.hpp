@@ -21,16 +21,16 @@ class block_rlbwt {
    public:
     static const constexpr uint32_t cap = super_block_type::cap;
 
-    typedef super_block_type::block_type block_type;
+    typedef super_block_type_::block_type block_type;
     typedef block_type::alphabet_type block_alphabet_type;
 
     block_rlbwt(std::string path) {
         std::FILE* in_file = std::fopen(path.c_str(), "rb");
 
-        uint64_t data_bytes, blocks;
+        uint64_t data_bytes;
         std::fread(&data_bytes, sizeof(uint64_t), 1, in_file);
         std::fread(&size_, sizeof(uint64_t), 1, in_file);
-        std::fread(block_count_, sizeof(uint64_t), 1, in_file);
+        std::fread(&block_count_, sizeof(uint64_t), 1, in_file);
         p_sums_ = (alphabet_type*)std::malloc(data_bytes);
         std::fread(p_sums_, sizeof(uint8_t), data_bytes, in_file);
 
@@ -45,7 +45,7 @@ class block_rlbwt {
             suffix = path.substr(loc);
         }
 
-        for (uint64_t i = 0; i < blocks; i++) {
+        for (uint64_t i = 0; i < block_count_; i++) {
             s_blocks_.push_back(read_super_block(prefix + "_" + std::to_string(i) + suffix));
         }
         std::fclose(in_file);
@@ -84,7 +84,7 @@ class block_rlbwt {
             return 0;
         }
         uint64_t s_block_i = i / SUPER_BLOCK_ELEMS;
-        return s_blocks_[s_block_i].at(i % SUPER_BLOCK_ELEMS);
+        return s_blocks_[s_block_i]->at(i % SUPER_BLOCK_ELEMS);
     }
 
     uint64_t rank(uint8_t c, uint64_t i) {
@@ -93,12 +93,16 @@ class block_rlbwt {
         }
         uint64_t s_block_i = i / SUPER_BLOCK_ELEMS;
         uint64_t res = p_sums_[s_block_i].at(c);
-        res += s_blocks_[s_block_i].rank(c, i % SUPER_BLOCK_ELEMS);
+        res += s_blocks_[s_block_i]->rank(c, i % SUPER_BLOCK_ELEMS);
         return res;
     }
 
+    uint64_t size() {
+        return size_;
+    }
+
    private:
-    super_block_type* read_super_block(std::string& path) {
+    super_block_type* read_super_block(std::string path) {
         std::FILE* in_file = std::fopen(path.c_str(), "br");
         uint64_t in_bytes;
         std::fread(&in_bytes, sizeof(uint64_t), 1, in_file);

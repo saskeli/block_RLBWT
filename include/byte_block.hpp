@@ -8,15 +8,13 @@
 namespace bbwt {
 template <uint32_t block_size, class alphabet_type_>
 class byte_block {
+   private:
+    static_assert(block_size < (uint32_t(1) << 15));
    public:
     typedef alphabet_type_ alphabet_type;
     static const constexpr uint32_t cap = block_size;
     static const constexpr uint32_t scratch_blocks = 2;
-    static const constexpr uint32_t min_size =
-        2 + (block_size >= (uint32_t(1) << 7) ? 1 : 0) +
-        (block_size >= (uint32_t(1) << 14) ? 1 : 0) +
-        (block_size >= (uint32_t(1) << 21) ? 1 : 0) +
-        (block_size >= (uint32_t(1) << 28) ? 1 : 0);
+    static const constexpr uint32_t min_size = 3;
 
     static const constexpr uint32_t max_size = 2 * block_size;
 
@@ -36,16 +34,15 @@ class byte_block {
     byte_block& operator=(const byte_block&) = delete;
 
     uint32_t append(uint8_t head, uint32_t length, uint8_t** scratch) {
-        uint32_t ret = 2;
         uint64_t* offset = reinterpret_cast<uint64_t*>(scratch[0]);
         scratch[1][offset[0]++] = head;
-        while (length >= 0b10000000) {
-            scratch[1][offset[0]++] = length & 0b01111111;
-            length >>= 7;
-            ret++;
+        if (length <= 0b01111111) {
+            scratch[1][offset[0]++] = length;
+            return 2;
         }
-        scratch[1][offset[0]++] = length | 0b10000000;
-        return ret;
+        scratch[1][offset[0]++] = (length & 0b01111111) | 0b10000000;
+        scratch[1][offset[0]++] = length >> 7;
+        return 3;
     }
 
     uint8_t at(uint32_t location) {
@@ -79,21 +76,24 @@ class byte_block {
         }
     }
 
-    void commit(uint8_t** scratch) {
+    uint64_t commit(uint8_t** scratch) {
         uint64_t* bytes = reinterpret_cast<uint64_t*>(scratch[0]);
         uint8_t* data = reinterpret_cast<uint8_t*>(this);
         std::memcpy(data, scratch[1], bytes[0]);
+        return bytes[0];
     }
+
+    void clear() {}
 
    private:
     uint32_t read(uint32_t& i, uint8_t* data) {
-        uint32_t res = 0;
-        uint32_t offset = 0;
-        while ((data[i] & 0b10000000) == 0) [[unlikely]] {
-            res |= data[i++] << offset;
-            offset += 7;
+        if (data[i] & 0b10000000) {
+            uint32_t res = data[i++] & 0b01111111;
+            res |= data[i++] << 7;
+            return res;
+        } else {
+            return data[i++];
         }
-        return res | ((data[i++] & 0b01111111) << offset);
     }
 };
 }  // namespace bbwt

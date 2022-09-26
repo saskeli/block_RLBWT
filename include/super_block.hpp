@@ -3,11 +3,11 @@
 #include <string>
 
 namespace bbwt {
-template<class block_type_, class alphabet_type_>
+template<class block_type_>
 class super_block {
    public:
     typedef block_type_ block_type;
-    typedef alphabet_type_ alphabet_type;
+    typedef block_type::alphabet_type alphabet_type;
     static const constexpr uint64_t blocks = (uint64_t(1) << 32) / block_type::cap;
    private:
     uint64_t offsets_[blocks];
@@ -22,7 +22,7 @@ class super_block {
 
     uint8_t at(uint32_t i) {
         uint32_t block_i = i / block_type::cap;
-        block_type* block = data() + offsets_[block_i];
+        block_type* block = reinterpret_cast<block_type*>(data() + offsets_[block_i]);
         return block->at(i % cap);
     }
 

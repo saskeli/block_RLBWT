@@ -28,6 +28,10 @@ class byte_alphabet {
         counts_[c] += v;
     }
 
+    void clear() {
+        std::memset(counts_, 0, sizeof(dtype) * A_SIZE);
+    }
+
     void p_sum(uint8_t c) {
         return counts_[c];
     }
