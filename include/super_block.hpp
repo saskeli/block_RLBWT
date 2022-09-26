@@ -28,9 +28,9 @@ class super_block {
 
     uint32_t rank(uint8_t c, uint32_t i) {
         uint32_t block_i = i / block_type::cap;
-        block_type* block = data() + offsets_[block_i];
-        alphabet_type* alpha = data() + offsets_[block_i] - sizeof(alphabet_type);
-        uint32_t res = alpha->get(c);
+        block_type* block = reinterpret_cast<block_type*>(data() + offsets_[block_i]);
+        alphabet_type* alpha = reinterpret_cast<alphabet_type*>(data() + offsets_[block_i] - sizeof(alphabet_type));
+        uint32_t res = alpha->p_sum(c);
         res += block->rank(c, i % block_type::cap);
         return res;
     }

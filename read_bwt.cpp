@@ -25,9 +25,10 @@ int main(int argc, char const* argv[]) {
     
     rlbwt bwt(argv[1]);
 
-    uint64_t s = std::min(uint64_t(100), bwt.size());
-    for (uint64_t i = 0; i < s; i++) {
-        std::cout << bwt.at(i);
-    }
-    std::cout << std::endl;
+    uint64_t loc = (uint64_t(1) << 32) + 2;
+    std::cout << "char at " << loc << " = " << char(bwt.at(loc)) << std::endl;
+    std::cout << "rank(a, " << loc << ") = " << bwt.rank('a', loc) << std::endl;
+    std::cout << "rank(b, " << loc << ") = " << bwt.rank('b', loc) << std::endl;
+    std::cout << "rank(c, " << loc << ") = " << bwt.rank('c', loc) << std::endl;
+    std::cout << "rank(d, " << loc << ") = " << bwt.rank('d', loc) << std::endl;
 }

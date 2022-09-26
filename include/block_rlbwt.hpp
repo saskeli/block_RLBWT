@@ -99,10 +99,10 @@ class block_rlbwt {
 
     uint64_t rank(uint8_t c, uint64_t i) {
         if (i >= size_) [[unlikely]] {
-            return p_sums_[block_count_].at(c);
+            return p_sums_[block_count_].p_sum(c);
         }
         uint64_t s_block_i = i / SUPER_BLOCK_ELEMS;
-        uint64_t res = p_sums_[s_block_i].at(c);
+        uint64_t res = p_sums_[s_block_i].p_sum(c);
         res += s_blocks_[s_block_i]->rank(c, i % SUPER_BLOCK_ELEMS);
         return res;
     }
