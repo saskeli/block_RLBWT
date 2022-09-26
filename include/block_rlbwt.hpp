@@ -1,7 +1,9 @@
 #pragma once
 
+#include <cassert>
 #include <cstring>
 #include <iostream>
+#include <fstream>
 #include <utility>
 #include <vector>
 
@@ -11,6 +13,7 @@ class block_rlbwt {
    public:
     typedef super_block_type_ super_block_type;
     typedef alphabet_type_ alphabet_type;
+
    private:
     static const constexpr uint64_t SUPER_BLOCK_ELEMS = uint64_t(1) << 32;
     uint64_t size_;
@@ -25,14 +28,21 @@ class block_rlbwt {
     typedef block_type::alphabet_type block_alphabet_type;
 
     block_rlbwt(std::string path) {
-        std::FILE* in_file = std::fopen(path.c_str(), "rb");
-
+        std::cerr << "Readig \"root\" from: " << path << " (" << path.size()
+                  << ")" << std::endl;
+        std::ifstream in_file;
+        in_file.open(path, std::ios::binary | std::ios::in);
+        if (in_file.fail()) {
+            std::cerr << " -> Failed" << std::endl;
+            exit(1);
+        }
         uint64_t data_bytes;
-        std::fread(&data_bytes, sizeof(uint64_t), 1, in_file);
-        std::fread(&size_, sizeof(uint64_t), 1, in_file);
-        std::fread(&block_count_, sizeof(uint64_t), 1, in_file);
+        in_file.read(reinterpret_cast<char*>(&data_bytes), sizeof(uint64_t));
+        in_file.read(reinterpret_cast<char*>(&size_), sizeof(uint64_t));
+        in_file.read(reinterpret_cast<char*>(&block_count_), sizeof(uint64_t));
         p_sums_ = (alphabet_type*)std::malloc(data_bytes);
-        std::fread(p_sums_, sizeof(uint8_t), data_bytes, in_file);
+        in_file.read(reinterpret_cast<char*>(p_sums_), data_bytes);
+        in_file.close();
 
         std::string prefix;
         std::string suffix;
@@ -45,10 +55,10 @@ class block_rlbwt {
             suffix = path.substr(loc);
         }
 
-        for (uint64_t i = 0; i < block_count_; i++) {
-            s_blocks_.push_back(read_super_block(prefix + "_" + std::to_string(i) + suffix));
+        for (uint64_t i = 1; i <= block_count_; i++) {
+            s_blocks_.push_back(
+                read_super_block(prefix + "_" + std::to_string(i) + suffix));
         }
-        std::fclose(in_file);
     }
 
     block_rlbwt() = delete;
@@ -97,18 +107,23 @@ class block_rlbwt {
         return res;
     }
 
-    uint64_t size() {
-        return size_;
-    }
+    uint64_t size() { return size_; }
 
    private:
     super_block_type* read_super_block(std::string path) {
-        std::FILE* in_file = std::fopen(path.c_str(), "br");
+        std::cerr << "Reading superblock from: " << path << " (" << path.size()
+                  << ")" << std::endl;
+        std::fstream in_file;
+        in_file.open(path, std::ios::binary | std::ios::in);
+        if (in_file.fail()) {
+            std::cerr << " -> Failed" << std::endl;
+            exit(1);
+        }
         uint64_t in_bytes;
-        std::fread(&in_bytes, sizeof(uint64_t), 1, in_file);
+        in_file.read(reinterpret_cast<char*>(&in_bytes), sizeof(uint64_t));
         uint8_t* data = (uint8_t*)std::malloc(in_bytes);
-        std::fread(data, sizeof(uint8_t), in_bytes, in_file);
-        std::fclose(in_file);
+        in_file.read(reinterpret_cast<char*>(data), in_bytes);
+        in_file.close();
         return reinterpret_cast<super_block_type*>(data);
     }
 };

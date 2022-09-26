@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <fstream>
 #include <vector>
 
 namespace bbwt {
@@ -64,23 +65,19 @@ class block_rlbwt_builder {
     }
 
     void append(uint8_t head, uint32_t length) {
-        std::cerr << "GOT: " << char(head) << ", " << length << std::endl;
         if (length + block_elems_ < bwt_type::cap) [[likely]] {
-            std::cerr << " -> Simple append" << std::endl;
             block_cumulative_.add(head, length);
             super_block_cumulative_.add(head, length);
             block_bytes_ += current_block_.append(head, length, scratch_);
             block_elems_ += length;
             elems_ += length;
         } else if (length + block_elems_ == bwt_type::cap) [[unlikely]] {
-            std::cerr << " -> append and commit" << std::endl;
             block_cumulative_.add(head, length);
             super_block_cumulative_.add(head, length);
             block_bytes_ += current_block_.append(head, length, scratch_);
             elems_ += length;
             commit();
         } else {
-            std::cerr << " -> split and commit" << std::endl;
             uint32_t fill = bwt_type::cap - block_elems_;
             block_cumulative_.add(head, fill);
             super_block_cumulative_.add(head, fill);
@@ -92,7 +89,6 @@ class block_rlbwt_builder {
     }
 
     void finalize() {
-        std::cerr << "finalize" << std::endl;
         if (block_elems_) {
             commit(true);
         }
@@ -104,36 +100,42 @@ class block_rlbwt_builder {
 
    private:
     void write_super_block() {
-        std::cerr << "Write super block" << std::endl;
-        std::FILE* out = std::fopen(
-            (prefix_ + "_" + std::to_string(block_counts_.size()) + suffix_)
-                .c_str(),
-            "wb");
+        std::cerr << "Writing super block" << std::endl;
+        uint64_t tot_bytes =
+            sizeof(uint64_t) +
+            sizeof(uint64_t) * bwt_type::super_block_type::blocks +
+            super_block_bytes_;
+        std::cerr << sizeof(uint64_t) << " + "
+                  << sizeof(uint64_t) * bwt_type::super_block_type::blocks
+                  << " + " << super_block_bytes_ << " = " << tot_bytes
+                  << " bytes = " << double(tot_bytes) / (uint64_t(1) << 30)
+                  << " GiB" << std::endl;
+
+        std::fstream out;
+        out.open(prefix_ + "_" + std::to_string(block_counts_.size()) + suffix_, std::ios::binary | std::ios::out);
         uint64_t file_bytes =
             super_block_bytes_ +
             sizeof(uint64_t) * bwt_type::super_block_type::blocks;
-        std::fwrite(&file_bytes, sizeof(uint64_t), 1, out);
-        std::fwrite(block_offsets_.data(), sizeof(uint64_t),
-                    block_offsets_.size(), out);
+        out.write(reinterpret_cast<char*>(&file_bytes), sizeof(uint64_t));
+        out.write(reinterpret_cast<char*>(block_offsets_.data()), sizeof(uint64_t) * block_offsets_.size());
         for (uint64_t i = block_offsets_.size();
              i < bwt_type::super_block_type::blocks; i++) {
             uint64_t zero = 0;
-            std::fwrite(&zero, sizeof(uint64_t), 1, out);
+            out.write(reinterpret_cast<char*>(&zero), sizeof(uint64_t));
         }
-        std::fwrite(current_super_block_, sizeof(uint8_t), super_block_bytes_,
-                    out);
+        out.write(reinterpret_cast<char*>(current_super_block_), super_block_bytes_);
         block_counts_.push_back(super_block_cumulative_);
-        std::fclose(out);
+        out.close();
 
         block_cumulative_.clear();
         block_offsets_.clear();
-        std::memset(current_super_block_, 0, sizeof(uint8_t) * super_block_size_);
+        std::memset(current_super_block_, 0,
+                    sizeof(uint8_t) * super_block_size_);
         super_block_bytes_ = sizeof(block_alphabet_type);
         blocks_in_super_block_ = 0;
     }
 
     void commit(bool last_block = false) {
-        std::cerr << "Committing block with last_block = " << (last_block ? "true" : "false") << std::endl;
         if (super_block_bytes_ + block_bytes_ > super_block_size_) {
             uint64_t new_size = super_block_bytes_ + block_bytes_;
             if (!last_block) {
@@ -171,15 +173,27 @@ class block_rlbwt_builder {
     }
 
     void write_root() {
-        std::cerr << "write_root" << std::endl;
         uint64_t n_blocks = block_counts_.size() - 1;
-        std::FILE* out = std::fopen((prefix_ + suffix_).c_str(), "wb");
+
+        std::cerr << "Writing \"root\" to file" << std::endl;
+        std::cerr << " Seen " << n_blocks << " super blocks" << std::endl;
+        std::cerr << " containing a total of " << elems_ << " elements"
+                  << std::endl;
+
+        std::fstream out;
+        out.open(prefix_ + suffix_, std::ios::binary | std::ios::out);
         uint64_t bytes = sizeof(alphabet_type) * block_counts_.size();
-        std::fwrite(&bytes, sizeof(uint64_t), 1, out);
-        std::fwrite(&elems_, sizeof(uint64_t), 1, out);
-        std::fwrite(&n_blocks, sizeof(uint64_t), 1, out);
-        std::fwrite(block_counts_.data(), sizeof(alphabet_type), block_counts_.size(), out);
-        std::fclose(out);
+        out.write(reinterpret_cast<char*>(&bytes), sizeof(uint64_t));
+        out.write(reinterpret_cast<char*>(&elems_), sizeof(uint64_t));
+        out.write(reinterpret_cast<char*>(&n_blocks), sizeof(uint64_t));
+        out.write(reinterpret_cast<char*>(block_counts_.data()), sizeof(alphabet_type) * block_counts_.size());
+        out.close();
+
+        std::cerr << sizeof(uint64_t) << " + " << sizeof(uint64_t) << " + "
+                  << sizeof(uint64_t) << " + " << bytes << " = "
+                  << bytes + 3 * sizeof(uint64_t) << " bytes = "
+                  << double(bytes + 3 * sizeof(uint64_t)) / (uint64_t(1) << 20)
+                  << " MiB" << std::endl;
     }
 };
 }  // namespace bbwt
