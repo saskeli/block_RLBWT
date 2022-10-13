@@ -3,20 +3,9 @@
 #include <fstream>
 
 #include "include/reader.hpp"
-#include "include/block_rlbwt_builder.hpp"
-#include "include/byte_block.hpp"
-#include "include/block_rlbwt.hpp"
-#include "include/byte_alphabet.hpp"
-#include "include/super_block.hpp"
+#include "include/types.hpp"
 
 static const constexpr uint32_t BLOCK_SIZE = 1 << 12;
-
-typedef bbwt::byte_alphabet<uint32_t> block_alphabet;
-typedef bbwt::byte_alphabet<uint64_t> super_block_alphabet;
-typedef bbwt::byte_block<BLOCK_SIZE, block_alphabet> block;
-typedef bbwt::super_block<block> s_block;
-typedef bbwt::block_rlbwt<s_block, super_block_alphabet> rlbwt;
-typedef bbwt::block_rlbwt_builder<rlbwt> builder;
 
 void help() {
     std::cout << "Create RLBWT data structure and output it to file.\n\n";
@@ -56,7 +45,7 @@ int main(int argc, char const* argv[]) {
     if (out_file_loc == 0) {
         std::cerr << "output file is required" << std::endl;
     }
-    builder b(argv[out_file_loc]);
+    bbwt::rlbwt<BLOCK_SIZE>::builder b(argv[out_file_loc]);
     if (in_file_loc) {
         std::ifstream in(argv[in_file_loc]);
         bbwt::file_reader reader(&in);

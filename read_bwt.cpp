@@ -3,32 +3,72 @@
 #include <fstream>
 
 #include "include/reader.hpp"
-#include "include/block_rlbwt_builder.hpp"
-#include "include/byte_block.hpp"
-#include "include/block_rlbwt.hpp"
-#include "include/byte_alphabet.hpp"
-#include "include/super_block.hpp"
+#include "include/types.hpp"
 
 static const constexpr uint32_t BLOCK_SIZE = 1 << 12;
-
-typedef bbwt::byte_alphabet<uint32_t> block_alphabet;
-typedef bbwt::byte_alphabet<uint64_t> super_block_alphabet;
-typedef bbwt::byte_block<BLOCK_SIZE, block_alphabet> block;
-typedef bbwt::super_block<block> s_block;
-typedef bbwt::block_rlbwt<s_block, super_block_alphabet> rlbwt;
+static const constexpr uint32_t BUFFER_SIZE = 100;
 
 int main(int argc, char const* argv[]) {
-    if (argc < 2) {
-        std::cerr << "Path to block_rlwbt is required" << std::endl;
+    if (argc < 3) {
+        std::cerr << "Path to block_rlwbt and plaintext file are required" << std::endl;
         exit(1);
     }
     
-    rlbwt bwt(argv[1]);
+    bbwt::rlbwt<BLOCK_SIZE> bwt(argv[1]);
 
-    uint64_t loc = (uint64_t(1) << 32) + 2;
-    std::cout << "char at " << loc << " = " << char(bwt.at(loc)) << std::endl;
-    std::cout << "rank(a, " << loc << ") = " << bwt.rank('a', loc) << std::endl;
-    std::cout << "rank(b, " << loc << ") = " << bwt.rank('b', loc) << std::endl;
-    std::cout << "rank(c, " << loc << ") = " << bwt.rank('c', loc) << std::endl;
-    std::cout << "rank(d, " << loc << ") = " << bwt.rank('d', loc) << std::endl;
+    std::ifstream in_file;
+    in_file.open(argv[2], std::ios::binary | std::ios::in);
+    if (in_file.fail()) {
+        std::cerr << " -> Failed" << std::endl;
+        exit(1);
+    }
+    uint64_t counts[256];
+    std::memset(counts, 0, 256 * sizeof(uint64_t));
+    char data_bytes[BUFFER_SIZE];
+    uint64_t read = 0;
+    while (true) {
+        in_file.read(data_bytes, BUFFER_SIZE);
+        read += in_file.gcount();
+        for (uint32_t i = 0; i < in_file.gcount(); i++) {
+            counts[uint8_t(data_bytes[i])]++;
+        }
+        uint64_t r = bwt.rank('a', read);
+        if (counts['a'] != r) {
+            std::cerr << "rank('a', " << read << ") = " << r << " != " << counts['a'] << std::endl;
+            in_file.close();
+            exit(1);
+        }
+        r = bwt.rank('b', read);
+        if (counts['b'] != r) {
+            std::cerr << "rank('b', " << read << ") = " << r << " != " << counts['b'] << std::endl;
+            in_file.close();
+            exit(1);
+        }
+        r = bwt.rank('c', read);
+        if (counts['c'] != r) {
+            std::cerr << "rank('c', " << read << ") = " << r << " != " << counts['c'] << std::endl;
+            in_file.close();
+            exit(1);
+        }
+        r = bwt.rank('d', read);
+        if (counts['d'] != r) {
+            std::cerr << "rank('d', " << read << ") = " << r << " != " << counts['d'] << std::endl;
+            in_file.close();
+            exit(1);
+        }
+        char a = bwt.at(read - 1);
+        if (data_bytes[in_file.gcount() - 1] != a) {
+            std::cerr << "at(" << read - 1 << ") = " << a << " != " << data_bytes[in_file.gcount() - 1] << std::endl;
+            in_file.close();
+            exit(1);
+        }
+        if (in_file.eof()) {
+            break;
+        }
+        if (read % 1000000 == 0) {
+            std::cout << "Ok to " << read << "\r";
+        }
+    }
+    std::cout << "Read " << read << " characters. All OK." << std::endl;
+    in_file.close();
 }

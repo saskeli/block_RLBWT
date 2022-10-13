@@ -7,12 +7,15 @@
 #include <utility>
 #include <vector>
 
+#include "block_rlbwt_builder.hpp"
+
 namespace bbwt {
 template <class super_block_type_, class alphabet_type_>
 class block_rlbwt {
    public:
     typedef super_block_type_ super_block_type;
     typedef alphabet_type_ alphabet_type;
+    typedef block_rlbwt_builder<block_rlbwt> builder;
 
    private:
     static const constexpr uint64_t SUPER_BLOCK_ELEMS = uint64_t(1) << 32;
@@ -23,6 +26,8 @@ class block_rlbwt {
 
    public:
     static const constexpr uint32_t cap = super_block_type::cap;
+
+    static_assert(SUPER_BLOCK_ELEMS % cap == 0);
 
     typedef super_block_type_::block_type block_type;
     typedef block_type::alphabet_type block_alphabet_type;
@@ -59,6 +64,7 @@ class block_rlbwt {
             s_blocks_.push_back(
                 read_super_block(prefix + "_" + std::to_string(i) + suffix));
         }
+        std::cerr << size_ << " elems read" << std::endl;
     }
 
     block_rlbwt() = delete;
@@ -94,15 +100,24 @@ class block_rlbwt {
             return 0;
         }
         uint64_t s_block_i = i / SUPER_BLOCK_ELEMS;
+        //std::cerr << "Super block " << s_block_i << std::endl;
         return s_blocks_[s_block_i]->at(i % SUPER_BLOCK_ELEMS);
     }
 
     uint64_t rank(uint8_t c, uint64_t i) {
+        if (debug)
+            std::cerr << "rank(" << c << ", " << i << ") et block rlbwt" << std::endl;
         if (i >= size_) [[unlikely]] {
+            if (debug)
+                std::cerr << "\tCap query -> " << p_sums_[block_count_].p_sum(c) << std::endl;
             return p_sums_[block_count_].p_sum(c);
         }
         uint64_t s_block_i = i / SUPER_BLOCK_ELEMS;
         uint64_t res = p_sums_[s_block_i].p_sum(c);
+        if (debug) {
+            std::cerr << "\tTargets super block " << s_block_i << " with partial " << res << std::endl;
+            std::cerr << "\t" << i << " % " << SUPER_BLOCK_ELEMS << " = " << i % SUPER_BLOCK_ELEMS << std::endl;
+        }
         res += s_blocks_[s_block_i]->rank(c, i % SUPER_BLOCK_ELEMS);
         return res;
     }

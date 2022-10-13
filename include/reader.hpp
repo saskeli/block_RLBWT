@@ -7,6 +7,7 @@ namespace bbwt {
 class file_reader {
   private:
     std::istream* in;
+    
     struct if_ref {
         uint32_t length;
         char head;

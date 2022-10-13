@@ -3,7 +3,6 @@
 #include <cstring>
 #include <iostream>
 #include <utility>
-#include <vector>
 
 namespace bbwt {
 template <uint32_t block_size, class alphabet_type_>

@@ -1,7 +1,8 @@
 CFLAGS = -std=c++2a -Wall -Wextra -Wshadow -pedantic -march=native
 
 HEADERS = include/reader.hpp include/block_rlbwt_builder.hpp include/block_rlbwt.hpp \
-          include/byte_block.hpp include/byte_alphabet.hpp include/super_block.hpp
+          include/byte_block.hpp include/byte_alphabet.hpp include/super_block.hpp \
+		  include/types.hpp include/two_byte_block.hpp
 
 COVERAGE = -g
 

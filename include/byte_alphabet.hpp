@@ -4,6 +4,15 @@
 namespace bbwt {
 template <class dtype>
 class byte_alphabet {
+  public:
+    static const constexpr uint8_t width = 8;
+    static constexpr uint8_t convert(uint8_t c) {
+        return c;
+    }
+    static constexpr uint8_t revert(uint8_t c) {
+        return c;
+    }
+
   private:
     static const constexpr uint16_t A_SIZE = 256;
     dtype counts_[A_SIZE];
