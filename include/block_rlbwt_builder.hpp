@@ -13,9 +13,9 @@ class block_rlbwt_builder {
     static const constexpr uint64_t BLOCKS_IN_SUPER_BLOCK =
         bwt_type::super_block_type::blocks;
 
-    typedef bwt_type::alphabet_type alphabet_type;
-    typedef bwt_type::block_alphabet_type block_alphabet_type;
-    typedef bwt_type::block_type block_type;
+    typedef typename bwt_type::alphabet_type alphabet_type;
+    typedef typename bwt_type::block_alphabet_type block_alphabet_type;
+    typedef typename bwt_type::block_type block_type;
 
     std::string prefix_;
     std::string suffix_;
@@ -102,13 +102,6 @@ class block_rlbwt_builder {
    private:
     void write_super_block() {
         std::cerr << "Writing super block" << std::endl;
-        if (block_counts_.size() == 1) {
-            std::cerr << "At time of writing: " << std::endl;
-            uint32_t* pt = reinterpret_cast<uint32_t*>(current_super_block_ + 68143152);
-            for (uint32_t i = 0; i < 4; i++) {
-                std::cerr << pt[i] << " <-> " << std::bitset<32>(pt[i]) << std::endl;
-            }
-        }
         std::cerr << "Total of " << elems_ << " elements read" << std::endl;
         uint64_t tot_bytes =
             sizeof(uint64_t) +

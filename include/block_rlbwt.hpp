@@ -29,8 +29,8 @@ class block_rlbwt {
 
     static_assert(SUPER_BLOCK_ELEMS % cap == 0);
 
-    typedef super_block_type_::block_type block_type;
-    typedef block_type::alphabet_type block_alphabet_type;
+    typedef typename super_block_type_::block_type block_type;
+    typedef typename block_type::alphabet_type block_alphabet_type;
 
     block_rlbwt(std::string path) {
         std::cerr << "Readig \"root\" from: " << path << " (" << path.size()

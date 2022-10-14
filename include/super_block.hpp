@@ -8,7 +8,7 @@ template <class block_type_>
 class super_block {
    public:
     typedef block_type_ block_type;
-    typedef block_type::alphabet_type alphabet_type;
+    typedef typename block_type::alphabet_type alphabet_type;
     static_assert((uint64_t(1) << 32) % block_type::cap == 0);
     static const constexpr uint64_t blocks =
         (uint64_t(1) << 32) / block_type::cap;
