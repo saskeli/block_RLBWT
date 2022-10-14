@@ -57,7 +57,11 @@ int main(int argc, char const* argv[]) {
             std::cerr << "Both heads and run lengths are required" << std::endl;
             help();
         }
-        bbwt::multi_reader reader(std::fopen(argv[heads_loc], "rb"), std::fopen(argv[runs_loc], "rb"));
+        std::ifstream heads;
+        std::ifstream runs;
+        heads.open(argv[heads_loc], std::ios_base::in | std::ios_base::binary);
+        runs.open(argv[runs_loc], std::ios_base::in | std::ios_base::binary);
+        bbwt::multi_reader reader(&heads, &runs);
         for (auto it : reader) {
             b.append(it.head, it.length);
         }

@@ -88,8 +88,8 @@ class file_reader {
 
 class multi_reader {
   private:
-    std::FILE* heads_;
-    std::FILE* runs_;
+    std::ifstream* heads_;
+    std::ifstream* runs_;
 
     struct mf_ref {
         uint32_t length;
@@ -97,21 +97,21 @@ class multi_reader {
     };
     class mf_iterator {
       private:
-        std::FILE* heads_;
-        std::FILE* runs_;
+        std::ifstream* heads_;
+        std::ifstream* runs_;
       public:
         uint32_t length_;
         char head_;
-        mf_iterator(std::FILE* heads, std::FILE* runs) : heads_(heads), runs_(runs) {
-            size_t read_a = std::fread(&head_, sizeof(char), 1, heads_);
-            size_t read_b = std::fread(&length_, sizeof(uint32_t), 1, runs_);
-            if (read_a == 0 || read_b == 0) {
+        mf_iterator(std::ifstream* heads, std::ifstream* runs) : heads_(heads), runs_(runs) {
+            heads_->read(&head_, 1);
+            runs_->read(reinterpret_cast<char*>(&length_), sizeof(uint32_t));
+            if (heads_->gcount() == 0 || runs_->gcount() == 0) {
                 head_ = '\0';
                 length_ = 0;
             }
         }
 
-        mf_iterator() : heads_(nullptr), runs_(nullptr), length_(0), head_('\0') {}
+        mf_iterator() : heads_(), runs_(), length_(0), head_('\0') {}
 
         bool operator==(const mf_iterator& rhs) const {
             return head_ == rhs.head_ && length_ == rhs.length_;
@@ -122,9 +122,9 @@ class multi_reader {
         }
 
         mf_iterator& operator++() {
-            size_t read_a = std::fread(&head_, sizeof(char), 1, heads_);
-            size_t read_b = std::fread(&length_, sizeof(uint32_t), 1, runs_);
-            if (read_a == 0 || read_b == 0) {
+            heads_->read(&head_, 1);
+            runs_->read(reinterpret_cast<char*>(&length_), sizeof(uint32_t));
+            if (heads_->gcount() == 0 || runs_->gcount() == 0) {
                 head_ = '\0';
                 length_ = 0;
             }
@@ -136,7 +136,7 @@ class multi_reader {
         }
     };
   public:
-    multi_reader(std::FILE* heads, std::FILE* runs) : heads_(heads), runs_(runs) {}
+    multi_reader(std::ifstream* heads, std::ifstream* runs) : heads_(heads), runs_(runs) {}
 
     mf_iterator begin() {
         return mf_iterator(heads_, runs_);

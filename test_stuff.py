@@ -3,15 +3,20 @@ from collections import defaultdict
 
 def main(path):
     d = defaultdict(int)
-    n = 1 << 32
-    n += 2
     c = None
-    with open(path) as in_file:
-        for _ in range(n):
+    n = 0
+    with open(path, 'rb') as in_file:
+        while True:
             c = in_file.read(1)
+            if not c:
+                break 
             d[c] += 1
+            n += 1
+            if (n % 100000 == 0): 
+                print(n, "read")
     print("at", n, c)
-    print(d)
+    for sym, count in d.items():
+        print(sym, count)
 
 
 if __name__ == "__main__":

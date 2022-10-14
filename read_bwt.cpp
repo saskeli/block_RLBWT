@@ -32,30 +32,6 @@ int main(int argc, char const* argv[]) {
         for (uint32_t i = 0; i < in_file.gcount(); i++) {
             counts[uint8_t(data_bytes[i])]++;
         }
-        uint64_t r = bwt.rank('a', read);
-        if (counts['a'] != r) {
-            std::cerr << "rank('a', " << read << ") = " << r << " != " << counts['a'] << std::endl;
-            in_file.close();
-            exit(1);
-        }
-        r = bwt.rank('b', read);
-        if (counts['b'] != r) {
-            std::cerr << "rank('b', " << read << ") = " << r << " != " << counts['b'] << std::endl;
-            in_file.close();
-            exit(1);
-        }
-        r = bwt.rank('c', read);
-        if (counts['c'] != r) {
-            std::cerr << "rank('c', " << read << ") = " << r << " != " << counts['c'] << std::endl;
-            in_file.close();
-            exit(1);
-        }
-        r = bwt.rank('d', read);
-        if (counts['d'] != r) {
-            std::cerr << "rank('d', " << read << ") = " << r << " != " << counts['d'] << std::endl;
-            in_file.close();
-            exit(1);
-        }
         char a = bwt.at(read - 1);
         if (data_bytes[in_file.gcount() - 1] != a) {
             std::cerr << "at(" << read - 1 << ") = " << a << " != " << data_bytes[in_file.gcount() - 1] << std::endl;

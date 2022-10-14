@@ -4,6 +4,7 @@
 # Test data
 *.bin
 *.txt
+corpus/
 
 # Compiled Object files
 *.slo
@@ -36,6 +37,8 @@
 *.app
 make_bwt
 read_bwt
+cmake_bwt
+cread_bwt
 
 #vscode
 .vscode
