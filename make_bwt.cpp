@@ -13,7 +13,8 @@ void help() {
     std::cout << "   <out_file>     Path to file to write output to.\n";
     std::cout << "   -i file_name   File containing text to encode. (overrides -h and -r.)\n";
     std::cout << "   -h heads       File containing run heads as bytes.\n";
-    std::cout << "   -r runs        File containing run lengths as 32-bit integers.\n\n";
+    std::cout << "   -r runs        File containing run lengths as 32-bit integers.\n";
+    std::cout << "   -n             Strip new line characters from input.\n\n";
     std::cout << "Ouput file is required.\n"
               << "If no input file is given, input will be read from standard input.\n"
               << "If file_name is given, input will be read as a byte-stream from file.\n"
@@ -31,6 +32,7 @@ int main(int argc, char const* argv[]) {
     size_t heads_loc = 0;
     size_t runs_loc = 0;
     size_t out_file_loc = 0;
+    bool strip_new_line = false;
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-i") == 0) {
             in_file_loc = ++i;
@@ -38,6 +40,8 @@ int main(int argc, char const* argv[]) {
             heads_loc = ++i;
         } else if (strcmp(argv[i], "-r") == 0) {
             runs_loc = ++i;
+        } else if (strcmp(argv[i], "-n") == 0) { 
+            strip_new_line = true;
         } else {
             out_file_loc = i;
         }
@@ -45,11 +49,14 @@ int main(int argc, char const* argv[]) {
     if (out_file_loc == 0) {
         std::cerr << "output file is required" << std::endl;
     }
-    bbwt::rlbwt<BLOCK_SIZE>::builder b(argv[out_file_loc]);
+    bbwt::custom_rlbwt<BLOCK_SIZE>::builder b(argv[out_file_loc]);
     if (in_file_loc) {
         std::ifstream in(argv[in_file_loc]);
         bbwt::file_reader reader(&in);
         for (auto it : reader) {
+            if (strip_new_line && (it.head == '\n')) {
+                continue;
+            }
             b.append(it.head, it.length);
         }
     } else if (runs_loc || heads_loc) {
@@ -63,11 +70,17 @@ int main(int argc, char const* argv[]) {
         runs.open(argv[runs_loc], std::ios_base::in | std::ios_base::binary);
         bbwt::multi_reader reader(&heads, &runs);
         for (auto it : reader) {
+            if (strip_new_line && (it.head == '\n')) {
+                continue;
+            }
             b.append(it.head, it.length);
         }
     } else {
         bbwt::file_reader reader(&std::cin);
         for (auto it : reader) {
+            if (strip_new_line && (it.head == '\n')) {
+                continue;
+            }
             b.append(it.head, it.length);
         }
     }

@@ -14,6 +14,7 @@ class byte_block {
     static const constexpr uint32_t cap = block_size;
     static const constexpr uint32_t scratch_blocks = 2;
     static const constexpr uint32_t min_size = 3;
+    static const constexpr uint32_t padding_bytes = 0;
 
     static const constexpr uint32_t max_size = 2 * block_size;
 

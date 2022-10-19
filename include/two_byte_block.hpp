@@ -19,6 +19,7 @@ class two_byte_block {
     static const constexpr uint32_t scratch_blocks = 2;
     static const constexpr uint32_t min_size =
         block_size / LIMIT + (block_size % LIMIT ? 2 : 0);
+    static const constexpr uint32_t padding_bytes = 0;
 
     static const constexpr uint32_t max_size = 2 * block_size;
     static constexpr uint64_t scratch_size(uint32_t i) {

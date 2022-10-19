@@ -130,6 +130,11 @@ class block_rlbwt_builder {
         out.write(reinterpret_cast<char*>(current_super_block_),
                   super_block_bytes_);
         block_counts_.push_back(super_block_cumulative_);
+        if constexpr (block_type::padding_bytes) {
+            char padding[block_type::padding_bytes];
+            std::memset(padding, 0, block_type::padding_bytes);
+            out.write(padding, block_type::padding_bytes);
+        }
         out.close();
 
         block_cumulative_.clear();
