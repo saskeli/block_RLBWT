@@ -66,16 +66,16 @@ int main(int argc, char const* argv[]) {
 
     using std::chrono::duration_cast;
     using std::chrono::high_resolution_clock;
-    using std::chrono::microseconds;
-    std::cout << "c\ti\trank(c, i)\ttime(us)" << std::endl;
+    using std::chrono::nanoseconds;
+    std::cout << "c\ti\trank(c, i)\ttime(ns)" << std::endl;
     double micros = 0;
     for (auto q : queries) {
         auto start = high_resolution_clock::now();
         uint64_t r = bwt.rank(q.first, q.second);
         auto end = high_resolution_clock::now();
-        double time = duration_cast<microseconds>(end - start).count();
+        double time = duration_cast<nanoseconds>(end - start).count();
         std::cout << q.first << "\t" << q.second << "\t" << r << "\t" << time << std::endl;
         micros += time;
     }
-    std::cerr << "Mean query time: " << micros / n << "us" << std::endl;
+    std::cerr << "Mean query time: " << micros / n << "ns" << std::endl;
 }
