@@ -4,7 +4,8 @@ CLANGFLAGS = -std=c++2b -Wall -Wextra -Wshadow -pedantic -march=native
 
 HEADERS = include/reader.hpp include/block_rlbwt_builder.hpp include/block_rlbwt.hpp \
           include/byte_block.hpp include/byte_alphabet.hpp include/super_block.hpp \
-		  include/types.hpp include/two_byte_block.hpp include/custom_alphabet.hpp
+		  include/types.hpp include/two_byte_block.hpp include/custom_alphabet.hpp \
+		  include/one_byte_block.hpp
 
 COVERAGE = -g
 
@@ -23,7 +24,7 @@ clang: cmake_bwt cbench_bwt
 cmake_bwt: make_bwt.cpp $(HEADERS)
 	clang++ $(CLANGFLAGS) -DNDEBUG -O3 -o cmake_bwt make_bwt.cpp
 
-cread_bwt: bench_bwt.cpp $(HEADERS)
+cbench_bwt: bench_bwt.cpp $(HEADERS)
 	clang++ $(CLANGFLAGS) -DNDEBUG -O3 -o cbench_bwt bench_bwt.cpp
 
 make_bwt: make_bwt.cpp $(HEADERS)

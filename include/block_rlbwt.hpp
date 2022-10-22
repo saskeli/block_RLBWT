@@ -136,9 +136,14 @@ class block_rlbwt {
         }
         uint64_t in_bytes;
         in_file.read(reinterpret_cast<char*>(&in_bytes), sizeof(uint64_t));
+        in_bytes += block_type::padding_bytes;
         uint8_t* data = (uint8_t*)std::malloc(in_bytes);
+        if constexpr (block_type::padding_bytes) {
+            std::memset(data + (in_bytes - block_type::padding_bytes), 0, block_type::padding_bytes);
+        }
         in_file.read(reinterpret_cast<char*>(data), in_bytes);
         in_file.close();
+        
         return reinterpret_cast<super_block_type*>(data);
     }
 };
