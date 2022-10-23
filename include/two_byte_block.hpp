@@ -1,19 +1,24 @@
 #pragma once
 
-#include <iostream>
+#include <immintrin.h>
+
 #include <bitset>
+#include <iostream>
 
 namespace bbwt {
 template <uint32_t block_size, class alphabet_type_, bool avx = false>
 class two_byte_block {
-  public:
+   public:
     typedef alphabet_type_ alphabet_type;
-  private:
+
+   private:
     static_assert(alphabet_type::width < 8);
     static_assert(block_size <= ~uint32_t(0) >> 1);
     static const constexpr uint16_t SHIFT = 16 - alphabet_type::width;
     static const constexpr uint16_t LIMIT = uint16_t(1) << SHIFT;
     static const constexpr uint16_t MASK = LIMIT - 1;
+    static const constexpr uint16_t AVX_COUNT = 16;
+
    public:
     static const constexpr uint32_t cap = block_size;
     static const constexpr uint32_t scratch_blocks = 2;
@@ -101,63 +106,92 @@ class two_byte_block {
 
     void clear() {}
 
-  private:
+   private:
+    
+    inline uint32_t sum32(__m256i a) {
+        __m128i low = _mm256_castsi256_si128(a);
+        __m128i high = _mm256_extracti128_si256(a, 1);
+        low = _mm_add_epi32(low, high);
+
+        high = _mm_move_epi64(low);
+        low = _mm_add_epi32(low, high);
+        return _mm_extract_epi32(low, 1) + _mm_extract_epi32(low, 2);
+    }
+
     uint8_t avx_at(uint32_t location) {
-        const constexpr uint32_t avx_iter = 16;
-        uint16_t* data = reinterpret_cast<uint16_t*>(this);
+        const __m256i ONES =
+            _mm256_set1_epi16(1);
+        const __m256i VMASK =
+            _mm256_set1_epi16(MASK);
+        __m256i* vdata = reinterpret_cast<__m256i*>(this);
         uint32_t i = 0;
         uint32_t length = 0;
         while (true) {
-            for (uint32_t ii = 0; ii < avx_iter; ii++) {
-                length += 1 + (data[i++] & MASK);
-            }
+            __m256i v = vdata[i++];
+            v = _mm256_and_si256(v, VMASK);
+            v = _mm256_add_epi16(v, ONES);
+            v = _mm256_madd_epi16(v, ONES);
+            length += sum32(v);
             if (length > location) [[unlikely]] {
                 break;
             }
         }
         i--;
-        for (uint32_t ii = 0; ii < avx_iter; i++) {
-            length -= 1 + (data[i - ii] & MASK);
+        uint16_t* vu = reinterpret_cast<uint16_t*>(&vdata[i]);
+        for (uint16_t ii = AVX_COUNT - 1; ii < AVX_COUNT; ii--) {
+            uint8_t current = vu[ii] >> SHIFT;
+            uint16_t v = vu[ii] & MASK;
+            v++;
+            length -= v;
             if (length <= location) {
-                return data[i - ii] >> SHIFT;
+                return current;
             }
         }
+        return 0;
     }
 
     uint32_t avx_rank(uint8_t c, uint32_t location) {
-        const constexpr uint32_t avx_iter = 16;
-        uint16_t* data = reinterpret_cast<uint16_t*>(this);
+        __m256i* vdata = reinterpret_cast<__m256i*>(this);
         c = alphabet_type::convert(c);
+        const __m256i ccomp = _mm256_set1_epi16(c);
+        const __m256i cmask = _mm256_set1_epi16((uint16_t(1) << alphabet_type::width) - 1);
+        const __m256i vmask = _mm256_set1_epi16(MASK);
+        const __m256i ones = _mm256_set1_epi16(1);
+
         uint32_t res = 0;
         uint32_t length = 0;
         uint32_t i = 0;
         while (true) {
-            for (uint32_t ii = 0; ii < avx_iter; ii++) {
-                uint8_t v = data[i] & MASK;
-                v++;
-                length += v;
-                res += ((data[i++] >> SHIFT) == c) ? v : 0;
-            }
+            __m256i v = vdata[i++];
+            __m256i cvec = v >> SHIFT;
+            cvec = _mm256_and_si256(cvec, cmask);
+            cvec = _mm256_cmpeq_epi16(cvec, ccomp);
+            v = _mm256_and_si256(v, vmask);
+            v = _mm256_add_epi16(v, ones);
+            cvec = _mm256_madd_epi16(v, cvec);
+            v = _mm256_madd_epi16(v, ones);
+            res += sum32(cvec);
+            length += sum32(v);
             if (length >= location) [[unlikely]] {
                 break;
             }
         }
         i--;
-        for (uint32_t ii = 0; ii < avx_iter; i++) {
-            uint8_t v = data[i] & MASK;
+        uint16_t* data = reinterpret_cast<uint16_t*>(vdata + i);
+        for (uint32_t ii = AVX_COUNT - 1; ii < AVX_COUNT; ii--) {
+            uint16_t v = data[ii] & MASK;
             v++;
             length -= v;
-            res -= ((data[i--] >> SHIFT) == c) ? v : 0;
+            uint8_t current = data[ii] >> SHIFT;
+            res -= (current == c) ? v : 0;
             if (length < location) [[unlikely]] {
+                if (current == c) [[unlikely]] {
+                    res += location - length;
+                }
                 break;
             }
         }
-        i++;
-        if ((data[i] >> SHIFT) == c) [[unlikely]] {
-            res += location - length;
-        }
         return res;
     }
-
 };
 }  // namespace bbwt

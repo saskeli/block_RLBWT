@@ -4,6 +4,7 @@
 # Test data
 *.bin
 *.txt
+*.tsv
 corpus/
 bwt/
 
