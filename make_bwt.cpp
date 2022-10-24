@@ -5,8 +5,6 @@
 #include "include/reader.hpp"
 #include "include/types.hpp"
 
-static const constexpr uint32_t BLOCK_SIZE = 1 << 12;
-
 void help() {
     std::cout << "Create RLBWT data structure and output it to file.\n\n";
     std::cout << "Usage: make_rlbwt [-i file_name] [-h heads] [-r runs] <out_file>\n";
@@ -49,7 +47,7 @@ int main(int argc, char const* argv[]) {
     if (out_file_loc == 0) {
         std::cerr << "output file is required" << std::endl;
     }
-    bbwt::custom_rlbwt<BLOCK_SIZE>::builder b(argv[out_file_loc]);
+    bbwt::dyn_rlbwt<>::builder b(argv[out_file_loc]);
     if (in_file_loc) {
         std::ifstream in(argv[in_file_loc]);
         bbwt::file_reader reader(&in);

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <iostream>
-#include <bitset>
+#include <cstdint>
+#include <immintrin.h>
 
 namespace bbwt {
 template <uint32_t block_size, class alphabet_type_, bool avx = false>
@@ -46,16 +46,14 @@ class one_byte_block {
         uint64_t* offset = reinterpret_cast<uint64_t*>(scratch[0]);
         uint8_t* data = reinterpret_cast<uint8_t*>(scratch[1]);
         head = alphabet_type::convert(head);
-        uint32_t ret = 1;
         if constexpr (LIMIT < cap) {
             while (length > LIMIT) {
                 data[offset[0]++] = (head << SHIFT) | MASK;
                 length -= LIMIT;
-                ret += 1;
             }
         }
         data[offset[0]++] = (head << SHIFT) | (length - 1);
-        return ret;
+        return offset[0];
     }
 
     uint8_t at(uint32_t location) const {

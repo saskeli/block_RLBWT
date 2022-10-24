@@ -38,11 +38,11 @@ class byte_block {
         scratch[1][offset[0]++] = head;
         if (length <= 0b01111111) {
             scratch[1][offset[0]++] = length;
-            return 2;
+            return offset[0];
         }
         scratch[1][offset[0]++] = (length & 0b01111111) | 0b10000000;
         scratch[1][offset[0]++] = length >> 7;
-        return 3;
+        return offset[0];
     }
 
     uint8_t at(uint32_t location) {

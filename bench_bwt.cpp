@@ -6,9 +6,6 @@
 #include "include/reader.hpp"
 #include "include/types.hpp"
 
-static const constexpr uint32_t BLOCK_SIZE = 1 << 12;
-static const constexpr uint32_t BUFFER_SIZE = 100;
-
 void help() {
     std::cout << "Benchmark RLBWT data structure.\n\n";
     std::cout << "Usage: bench_bwt file_name [-n num] [-a alphabet]\n";
@@ -47,7 +44,7 @@ int main(int argc, char const* argv[]) {
         std::cerr << "Input file is required\n" << std::endl;
         help();
     }
-    bbwt::custom_rlbwt<BLOCK_SIZE> bwt(in_file_path);
+    bbwt::dyn_rlbwt<> bwt(in_file_path);
     std::cerr << "Testing " << in_file_path << "\n"
               << "with " << n << " queries in [0.." << bwt.size() << "]\n"
               << "from alphabet " << alphabet << "\n"

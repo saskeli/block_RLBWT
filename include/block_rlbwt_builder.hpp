@@ -69,20 +69,20 @@ class block_rlbwt_builder {
         if (length + block_elems_ < bwt_type::cap) [[likely]] {
             block_cumulative_.add(head, length);
             super_block_cumulative_.add(head, length);
-            block_bytes_ += current_block_.append(head, length, scratch_);
+            block_bytes_ = current_block_.append(head, length, scratch_);
             block_elems_ += length;
             elems_ += length;
         } else if (length + block_elems_ == bwt_type::cap) [[unlikely]] {
             block_cumulative_.add(head, length);
             super_block_cumulative_.add(head, length);
-            block_bytes_ += current_block_.append(head, length, scratch_);
+            block_bytes_ = current_block_.append(head, length, scratch_);
             elems_ += length;
             commit();
         } else {
             uint32_t fill = bwt_type::cap - block_elems_;
             block_cumulative_.add(head, fill);
             super_block_cumulative_.add(head, fill);
-            block_bytes_ += current_block_.append(head, fill, scratch_);
+            block_bytes_ = current_block_.append(head, fill, scratch_);
             elems_ += fill;
             commit();
             return append(head, length - fill);
