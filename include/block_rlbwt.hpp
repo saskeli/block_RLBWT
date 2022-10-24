@@ -95,7 +95,7 @@ class block_rlbwt {
         std::free(p_sums_);
     }
 
-    uint8_t at(uint64_t i) {
+    uint8_t at(uint64_t i) const {
         if (i >= size_) [[unlikely]] {
             return 0;
         }
@@ -104,7 +104,7 @@ class block_rlbwt {
         return s_blocks_[s_block_i]->at(i % SUPER_BLOCK_ELEMS);
     }
 
-    uint64_t rank(uint8_t c, uint64_t i) {
+    uint64_t rank(uint8_t c, uint64_t i) const {
         if (debug)
             std::cerr << "rank(" << c << ", " << i << ") et block rlbwt" << std::endl;
         if (i >= size_) [[unlikely]] {
@@ -122,7 +122,7 @@ class block_rlbwt {
         return res;
     }
 
-    uint64_t size() { return size_; }
+    uint64_t size() const { return size_; }
 
    private:
     super_block_type* read_super_block(std::string path) {

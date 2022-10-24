@@ -18,7 +18,9 @@ class two_byte_block {
     static const constexpr uint16_t LIMIT = uint16_t(1) << SHIFT;
     static const constexpr uint16_t MASK = LIMIT - 1;
     static const constexpr uint16_t AVX_COUNT = 16;
-
+    inline static const __m256i CMASK = _mm256_set1_epi16((uint16_t(1) << alphabet_type::width) - 1);
+    inline static const __m256i VMASK = _mm256_set1_epi16(MASK);
+    inline static const __m256i ONES = _mm256_set1_epi16(1);
    public:
     static const constexpr uint32_t cap = block_size;
     static const constexpr uint32_t scratch_blocks = 2;
@@ -58,7 +60,7 @@ class two_byte_block {
         return ret;
     }
 
-    uint8_t at(uint32_t location) {
+    uint8_t at(uint32_t location) const {
         if constexpr (avx) {
             avx_at(location);
         }
@@ -74,7 +76,7 @@ class two_byte_block {
         }
     }
 
-    uint32_t rank(uint8_t c, uint32_t location) {
+    uint32_t rank(uint8_t c, uint32_t location) const {
         if constexpr (avx) {
             avx_rank(c, location);
         }
@@ -107,8 +109,7 @@ class two_byte_block {
     void clear() {}
 
    private:
-    
-    inline uint32_t sum32(__m256i a) {
+    inline uint32_t sum32(__m256i a) const {
         __m128i low = _mm256_castsi256_si128(a);
         __m128i high = _mm256_extracti128_si256(a, 1);
         low = _mm_add_epi32(low, high);
@@ -118,16 +119,13 @@ class two_byte_block {
         return _mm_extract_epi32(low, 1) + _mm_extract_epi32(low, 2);
     }
 
-    uint8_t avx_at(uint32_t location) {
-        const __m256i ONES =
-            _mm256_set1_epi16(1);
-        const __m256i VMASK =
-            _mm256_set1_epi16(MASK);
+    uint8_t avx_at(uint32_t location) const {
         __m256i* vdata = reinterpret_cast<__m256i*>(this);
         uint32_t i = 0;
         uint32_t length = 0;
         while (true) {
-            __m256i v = vdata[i++];
+            __m256i v = _mm256_lddqu_si256(vdata + i);
+            i++;
             v = _mm256_and_si256(v, VMASK);
             v = _mm256_add_epi16(v, ONES);
             v = _mm256_madd_epi16(v, ONES);
@@ -137,39 +135,36 @@ class two_byte_block {
             }
         }
         i--;
-        uint16_t* vu = reinterpret_cast<uint16_t*>(&vdata[i]);
+        uint16_t* vu = reinterpret_cast<uint16_t*>(vdata + i);
         for (uint16_t ii = AVX_COUNT - 1; ii < AVX_COUNT; ii--) {
-            uint8_t current = vu[ii] >> SHIFT;
             uint16_t v = vu[ii] & MASK;
             v++;
             length -= v;
-            if (length <= location) {
-                return current;
+            if (length <= location) [[unlikely]] {
+                return vu[ii] >> SHIFT;
             }
         }
         return 0;
     }
 
-    uint32_t avx_rank(uint8_t c, uint32_t location) {
+    uint32_t avx_rank(uint8_t c, uint32_t location) const {
         __m256i* vdata = reinterpret_cast<__m256i*>(this);
         c = alphabet_type::convert(c);
         const __m256i ccomp = _mm256_set1_epi16(c);
-        const __m256i cmask = _mm256_set1_epi16((uint16_t(1) << alphabet_type::width) - 1);
-        const __m256i vmask = _mm256_set1_epi16(MASK);
-        const __m256i ones = _mm256_set1_epi16(1);
-
+        
         uint32_t res = 0;
         uint32_t length = 0;
         uint32_t i = 0;
         while (true) {
-            __m256i v = vdata[i++];
+            __m256i v = _mm256_lddqu_si256(vdata + i);
+            i++;
             __m256i cvec = v >> SHIFT;
-            cvec = _mm256_and_si256(cvec, cmask);
+            cvec = _mm256_and_si256(cvec, CMASK);
             cvec = _mm256_cmpeq_epi16(cvec, ccomp);
-            v = _mm256_and_si256(v, vmask);
-            v = _mm256_add_epi16(v, ones);
+            v = _mm256_and_si256(v, VMASK);
+            v = _mm256_add_epi16(v, ONES);
             cvec = _mm256_madd_epi16(v, cvec);
-            v = _mm256_madd_epi16(v, ones);
+            v = _mm256_madd_epi16(v, ONES);
             res += sum32(cvec);
             length += sum32(v);
             if (length >= location) [[unlikely]] {

@@ -134,7 +134,7 @@ class custom_alphabet {
         std::memset(this, 0, sizeof(custom_alphabet));
     }
 
-    dtype p_sum(uint8_t c) {
+    dtype p_sum(uint8_t c) const {
         if (c == 65) {
             return c0;
         } else if (c == 84) {

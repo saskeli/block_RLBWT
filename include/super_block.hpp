@@ -24,20 +24,20 @@ class super_block {
     super_block& operator=(const super_block& other) = delete;
     super_block& operator=(super_block&& other) = delete;
 
-    uint8_t at(uint32_t i) {
+    uint8_t at(uint32_t i) const {
         uint32_t block_i = i / cap;
         //std::cerr << " block " << block_i << std::endl;
-        block_type* block =
-            reinterpret_cast<block_type*>(data() + offsets_[block_i]);
+        const block_type* block =
+            reinterpret_cast<const block_type*>(data() + offsets_[block_i]);
         return block->at(i % cap);
     }
 
-    uint32_t rank(uint8_t c, uint32_t i) {
+    uint32_t rank(uint8_t c, uint32_t i) const {
         uint32_t block_i = i / cap;
         __builtin_prefetch(data() + offsets_[block_i]);
-        block_type* block =
-            reinterpret_cast<block_type*>(data() + offsets_[block_i]);
-        alphabet_type* alpha = reinterpret_cast<alphabet_type*>(
+        const block_type* block =
+            reinterpret_cast<const block_type*>(data() + offsets_[block_i]);
+        const alphabet_type* alpha = reinterpret_cast<const alphabet_type*>(
             data() + offsets_[block_i] - sizeof(alphabet_type));
         uint32_t res = alpha->p_sum(c);
         res += block->rank(c, i % cap);
@@ -45,20 +45,20 @@ class super_block {
     }
 
     template <class dtype>
-    void print_block(uint32_t idx, uint32_t n_bytes) {
+    void print_block(uint32_t idx, uint32_t n_bytes) const {
         dtype* dp = reinterpret_cast<dtype*>(data() + offsets_[idx]);
         for (uint32_t i = 0; i < n_bytes; i++) {
             std::cerr << std::bitset<sizeof(dtype) * 8>(dp[i]) << std::endl;
         }
     }
 
-    alphabet_type* get_psums(uint32_t i) {
+    alphabet_type* get_psums(uint32_t i) const {
         return reinterpret_cast<alphabet_type*>(data() + offsets_[i] - sizeof(alphabet_type));
     }
 
    private:
-    uint8_t* data() {
-        return reinterpret_cast<uint8_t*>(this) + sizeof(super_block);
+    const uint8_t* data() const {
+        return reinterpret_cast<const uint8_t*>(this) + sizeof(super_block);
     }
 };
 }  // namespace bbwt

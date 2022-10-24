@@ -163,7 +163,7 @@ int main(int argc, char const* argv[]) {
               << "    void clear() {\n"
               << "        std::memset(this, 0, sizeof(custom_alphabet));\n"
               << "    }\n\n"
-              << "    dtype p_sum(uint8_t c) {\n"
+              << "    dtype p_sum(uint8_t c) const {\n"
               << "        if (c == " << int(counts[0].second) << ") {\n"
               << "            return c0;\n";
     for (uint32_t i = 1; i < counts.size() - 1; i++) {
