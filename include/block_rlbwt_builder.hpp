@@ -4,7 +4,6 @@
 #include <iostream>
 #include <vector>
 #include <bitset>
-#include "debug.hpp"
 
 namespace bbwt {
 template <class bwt_type>
@@ -178,7 +177,6 @@ class block_rlbwt_builder {
         } else {
             write_super_block();
         }
-        debug = false;
     }
 
     void write_root() {

@@ -16,7 +16,7 @@ using rlbwt = block_rlbwt<
     delta_alphabet<uint64_t, '\n', '_'>>;
 
 using custom_rlbwt = block_rlbwt<
-    super_block<one_byte_block<4096, custom_alphabet<uint32_t>, true>>,
+    super_block<two_byte_block<16384, custom_alphabet<uint32_t>>>,
     custom_alphabet<uint64_t>>;
 
 template <uint32_t block_size = 16384>

@@ -2,6 +2,8 @@
 #include <cstring>
 #include <fstream>
 
+#include "include/debug.hpp"
+
 #include "include/reader.hpp"
 #include "include/types.hpp"
 
@@ -83,5 +85,6 @@ int main(int argc, char const* argv[]) {
         }
     }
     b.finalize();
+    std::cout << "a_blocks: " << bbwt::a_blocks << ", b_blocks: " << bbwt::b_blocks << std::endl;
     return 0;
 }

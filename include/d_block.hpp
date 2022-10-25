@@ -3,12 +3,14 @@
 #include <cstdint>
 #include <cstring>
 
+#include "debug.hpp"
+
 namespace bbwt {
 template <class block_a, class block_b>
 class d_block {
    private:
     uint8_t b_type;
-
+    static_assert(block_a::cap == block_b::cap);
    public:
     typedef block_a::alphabet_type alphabet_type;
     static const constexpr uint32_t cap = block_a::cap;
@@ -80,6 +82,7 @@ class d_block {
     uint64_t commit(uint8_t** scratch) {
         uint64_t bytes = 1;
         if (b_type) {
+            b_blocks++;
             if constexpr (sizeof(block_b)) {
                 std::memcpy(&b_type + 1, scratch[0] + sizeof(block_a),
                             sizeof(block_b));
@@ -87,6 +90,7 @@ class d_block {
             bytes += reinterpret_cast<block_b*>(&b_type + 1 + sizeof(block_b))
                          ->commit(scratch + 1 + block_a::scratch_blocks);
         } else {
+            a_blocks++;
             if constexpr (sizeof(block_a)) {
                 std::memcpy(&b_type + 1, scratch[0], sizeof(block_a));
             }

@@ -105,19 +105,11 @@ class block_rlbwt {
     }
 
     uint64_t rank(uint8_t c, uint64_t i) const {
-        if (debug)
-            std::cerr << "rank(" << c << ", " << i << ") et block rlbwt" << std::endl;
         if (i >= size_) [[unlikely]] {
-            if (debug)
-                std::cerr << "\tCap query -> " << p_sums_[block_count_].p_sum(c) << std::endl;
             return p_sums_[block_count_].p_sum(c);
         }
         uint64_t s_block_i = i / SUPER_BLOCK_ELEMS;
         uint64_t res = p_sums_[s_block_i].p_sum(c);
-        if (debug) {
-            std::cerr << "\tTargets super block " << s_block_i << " with partial " << res << std::endl;
-            std::cerr << "\t" << i << " % " << SUPER_BLOCK_ELEMS << " = " << i % SUPER_BLOCK_ELEMS << std::endl;
-        }
         res += s_blocks_[s_block_i]->rank(c, i % SUPER_BLOCK_ELEMS);
         return res;
     }

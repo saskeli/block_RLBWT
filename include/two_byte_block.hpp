@@ -144,7 +144,7 @@ class two_byte_block {
     }
 
     uint32_t avx_rank(uint8_t c, uint32_t location) const {
-        __m256i* vdata = reinterpret_cast<__m256i*>(this);
+        const __m256i* vdata = reinterpret_cast<const __m256i*>(this);
         c = alphabet_type::convert(c);
         const __m256i ccomp = _mm256_set1_epi16(c);
         
@@ -168,7 +168,7 @@ class two_byte_block {
             }
         }
         i--;
-        uint16_t* data = reinterpret_cast<uint16_t*>(vdata + i);
+        const uint16_t* data = reinterpret_cast<const uint16_t*>(vdata + i);
         for (uint32_t ii = AVX_COUNT - 1; ii < AVX_COUNT; ii--) {
             uint16_t v = data[ii] & MASK;
             v++;

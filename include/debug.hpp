@@ -2,6 +2,7 @@
 #include <iostream>
 
 namespace bbwt {
-    static bool debug = false;    
+    static uint64_t b_blocks = 0;
+    static uint64_t a_blocks = 0;
 } // namespace bbwt
 
