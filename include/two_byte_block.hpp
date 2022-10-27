@@ -12,14 +12,20 @@ class two_byte_block {
    private:
     static_assert(alphabet_type::width < 8);
     static_assert(block_size <= ~uint32_t(0) >> 1);
+#ifndef __AVX2__
+    static_assert(avx == false);
+#endif
     static const constexpr uint16_t SHIFT = 16 - alphabet_type::width;
     static const constexpr uint16_t LIMIT = uint16_t(1) << SHIFT;
     static const constexpr uint16_t MASK = LIMIT - 1;
+#ifdef __AVX2__
     static const constexpr uint16_t AVX_COUNT = 16;
     inline static const __m256i CMASK = _mm256_set1_epi16((uint16_t(1) << alphabet_type::width) - 1);
     inline static const __m256i VMASK = _mm256_set1_epi16(MASK);
     inline static const __m256i ONES = _mm256_set1_epi16(1);
+#endif
    public:
+    static const constexpr bool has_members = false;
     static const constexpr uint32_t cap = block_size;
     static const constexpr uint32_t scratch_blocks = 2;
     static const constexpr uint32_t min_size =
@@ -57,9 +63,11 @@ class two_byte_block {
     }
 
     uint8_t at(uint32_t location) const {
+#ifdef __AVX2__
         if constexpr (avx) {
             avx_at(location);
         }
+#endif
         const uint16_t* data = reinterpret_cast<const uint16_t*>(this);
         uint32_t i = 0;
         while (true) {
@@ -73,9 +81,11 @@ class two_byte_block {
     }
 
     uint32_t rank(uint8_t c, uint32_t location) const {
+#ifdef __AVX2__
         if constexpr (avx) {
             avx_rank(c, location);
         }
+#endif
         const uint16_t* data = reinterpret_cast<const uint16_t*>(this);
         c = alphabet_type::convert(c);
         uint32_t res = 0;
@@ -103,7 +113,7 @@ class two_byte_block {
     }
 
     void clear() {}
-
+#ifdef __AVX2__
    private:
     inline uint32_t sum32(__m256i a) const {
         __m128i low = _mm256_castsi256_si128(a);
@@ -137,7 +147,7 @@ class two_byte_block {
             v++;
             length -= v;
             if (length <= location) [[unlikely]] {
-                return vu[ii] >> SHIFT;
+                return alphabet_type::revert(vu[ii] >> SHIFT);
             }
         }
         return 0;
@@ -184,5 +194,6 @@ class two_byte_block {
         }
         return res;
     }
+#endif
 };
 }  // namespace bbwt

@@ -21,6 +21,7 @@ class block_rlbwt {
     static const constexpr uint64_t SUPER_BLOCK_ELEMS = uint64_t(1) << 32;
     uint64_t size_;
     uint64_t block_count_;
+    uint64_t bytes_;
     alphabet_type* p_sums_;
     std::vector<super_block_type*> s_blocks_;
 
@@ -32,7 +33,7 @@ class block_rlbwt {
     typedef typename super_block_type_::block_type block_type;
     typedef typename block_type::alphabet_type block_alphabet_type;
 
-    block_rlbwt(std::string path) {
+    block_rlbwt(std::string path) : bytes_(sizeof(block_rlbwt) + sizeof(alphabet_type)) {
         std::cerr << "Readig \"root\" from: " << path << " (" << path.size()
                   << ")" << std::endl;
         std::ifstream in_file;
@@ -64,6 +65,7 @@ class block_rlbwt {
             s_blocks_.push_back(
                 read_super_block(prefix + "_" + std::to_string(i) + suffix));
         }
+        bytes_ += s_blocks_.size() * sizeof(super_block_type*);
         std::cerr << size_ << " elems read" << std::endl;
     }
 
@@ -73,6 +75,7 @@ class block_rlbwt {
 
     block_rlbwt(block_rlbwt&& other) {
         size_ = std::exchange(other.size_, 0);
+        bytes_ = std::exchange(other.bytes_, 0);
         block_count_ = std::exchange(other.block_count_, 0);
         p_sums_ = std::exchange(other.p_sums_, nullptr);
         s_blocks_ =
@@ -115,6 +118,7 @@ class block_rlbwt {
     }
 
     uint64_t size() const { return size_; }
+    uint64_t bytes() const { return bytes_; }
 
    private:
     super_block_type* read_super_block(std::string path) {
@@ -135,7 +139,7 @@ class block_rlbwt {
         }
         in_file.read(reinterpret_cast<char*>(data), in_bytes);
         in_file.close();
-        
+        bytes_ += in_bytes;
         return reinterpret_cast<super_block_type*>(data);
     }
 };

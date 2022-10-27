@@ -13,6 +13,7 @@ class d_block {
     static_assert(block_a::cap == block_b::cap);
    public:
     typedef block_a::alphabet_type alphabet_type;
+    static const constexpr bool has_members = true;
     static const constexpr uint32_t cap = block_a::cap;
     static const constexpr uint32_t scratch_blocks =
         1 + block_a::scratch_blocks + block_b::scratch_blocks;
@@ -29,7 +30,7 @@ class d_block {
                                                    : block_b::max_size);
     static constexpr uint64_t scratch_size(uint32_t i) {
         if (i == 0) {
-            return sizeof(block_a) + sizeof(block_b) + 8;
+            return sizeof(block_a) + sizeof(block_b);
         }
         if (i > block_a::scratch_blocks) {
             i--;
@@ -83,18 +84,18 @@ class d_block {
         uint64_t bytes = 1;
         if (b_type) {
             b_blocks++;
-            if constexpr (sizeof(block_b)) {
+            if constexpr (block_b::has_members) {
                 std::memcpy(&b_type + 1, scratch[0] + sizeof(block_a),
                             sizeof(block_b));
             }
-            bytes += reinterpret_cast<block_b*>(&b_type + 1 + sizeof(block_b))
+            bytes += reinterpret_cast<block_b*>(&b_type + 1)
                          ->commit(scratch + 1 + block_a::scratch_blocks);
         } else {
             a_blocks++;
-            if constexpr (sizeof(block_a)) {
+            if constexpr (block_a::has_members) {
                 std::memcpy(&b_type + 1, scratch[0], sizeof(block_a));
             }
-            bytes += reinterpret_cast<block_a*>(&b_type + 1 + sizeof(block_a))
+            bytes += reinterpret_cast<block_a*>(&b_type + 1)
                          ->commit(scratch + 1);
         }
         return bytes;

@@ -44,7 +44,7 @@ int main(int argc, char const* argv[]) {
         std::cerr << "Input file is required\n" << std::endl;
         help();
     }
-    bbwt::dyn_rlbwt<> bwt(in_file_path);
+    bbwt::custom_rlbwt bwt(in_file_path);
     std::cerr << "Testing " << in_file_path << "\n"
               << "with " << n << " queries in [0.." << bwt.size() << "]\n"
               << "from alphabet " << alphabet << "\n"

@@ -1,27 +1,31 @@
 #pragma once
 
-#include <iostream>
 #include <fstream>
+#include <iostream>
 
 namespace bbwt {
 class file_reader {
-  private:
+   private:
     std::istream* in;
-    
+
     struct if_ref {
         uint32_t length;
         char head;
     };
     class if_iterator {
-      private:
+       private:
         std::istream* stream_;
-      public:
+
+       public:
         uint32_t length_;
         char head_;
-      private:  
+
+       private:
         char next_head_;
-      public:
-        if_iterator(char head, std::istream* stream) : stream_(stream), length_(head ? 1 : 0), head_(head) {
+
+       public:
+        if_iterator(char head, std::istream* stream)
+            : stream_(stream), length_(head ? 1 : 0), head_(head) {
             if (head) {
                 char c;
                 while (stream_->get(c)) {
@@ -68,26 +72,22 @@ class file_reader {
             return *this;
         }
 
-        if_ref operator*() {
-            return {length_, head_};
-        }
+        if_ref operator*() { return {length_, head_}; }
     };
 
-  public:
-    file_reader(std::istream* in_file): in(in_file) {}
+   public:
+    file_reader(std::istream* in_file) : in(in_file) {}
 
     if_iterator begin() {
         char c = in->get();
         return if_iterator(c, in);
     }
 
-    if_iterator end() {
-        return if_iterator('\0', in);
-    }
+    if_iterator end() { return if_iterator('\0', in); }
 };
 
 class multi_reader {
-  private:
+   private:
     std::ifstream* heads_;
     std::ifstream* runs_;
 
@@ -96,13 +96,15 @@ class multi_reader {
         char head;
     };
     class mf_iterator {
-      private:
+       private:
         std::ifstream* heads_;
         std::ifstream* runs_;
-      public:
+
+       public:
         uint32_t length_;
         char head_;
-        mf_iterator(std::ifstream* heads, std::ifstream* runs) : heads_(heads), runs_(runs) {
+        mf_iterator(std::ifstream* heads, std::ifstream* runs)
+            : heads_(heads), runs_(runs) {
             heads_->read(&head_, 1);
             runs_->read(reinterpret_cast<char*>(&length_), sizeof(uint32_t));
             if (heads_->gcount() == 0 || runs_->gcount() == 0) {
@@ -111,7 +113,9 @@ class multi_reader {
             }
         }
 
-        mf_iterator() : heads_(), runs_(), length_(0), head_('\0') {}
+        mf_iterator(std::ifstream* heads, std::ifstream* runs, uint32_t length,
+                    uint8_t head)
+            : heads_(heads), runs_(runs), length_(length), head_(head) {}
 
         bool operator==(const mf_iterator& rhs) const {
             return head_ == rhs.head_ && length_ == rhs.length_;
@@ -131,19 +135,15 @@ class multi_reader {
             return *this;
         }
 
-        mf_ref operator*() {
-            return {length_, head_};
-        }
+        mf_ref operator*() { return {length_, head_}; }
     };
-  public:
-    multi_reader(std::ifstream* heads, std::ifstream* runs) : heads_(heads), runs_(runs) {}
 
-    mf_iterator begin() {
-        return mf_iterator(heads_, runs_);
-    }
+   public:
+    multi_reader(std::ifstream* heads, std::ifstream* runs)
+        : heads_(heads), runs_(runs) {}
 
-    mf_iterator end() {
-        return mf_iterator();
-    }
+    mf_iterator begin() { return mf_iterator(heads_, runs_); }
+
+    mf_iterator end() { return mf_iterator(heads_, runs_, 0, '\0'); }
 };
-} // namespace bbwt
+}  // namespace bbwt

@@ -45,7 +45,7 @@ class block_rlbwt_builder {
           elems_(0),
           current_block_(),
           block_elems_(0),
-          block_bytes_(sizeof(block_type)),
+          block_bytes_(0),
           blocks_in_super_block_(0) {
         size_t loc = out_file.find_last_of('.');
         if (loc == std::string::npos) {
@@ -155,7 +155,7 @@ class block_rlbwt_builder {
         }
         
         block_offsets_.push_back(super_block_bytes_);
-        if constexpr (sizeof(block_type) > 0) {
+        if constexpr (block_type::has_members) {
             std::memcpy(current_super_block_ + super_block_bytes_, &current_block_,
                     sizeof(block_type));
         }
@@ -167,7 +167,7 @@ class block_rlbwt_builder {
         }
         current_block_.clear();
         block_elems_ = 0;
-        block_bytes_ = sizeof(block_type);
+        block_bytes_ = 0;
         blocks_in_super_block_++;
         if (!last_block && blocks_in_super_block_ < BLOCKS_IN_SUPER_BLOCK)
             [[likely]] {
