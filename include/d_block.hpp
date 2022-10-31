@@ -12,7 +12,7 @@ class d_block {
     uint8_t b_type;
     static_assert(block_a::cap == block_b::cap);
    public:
-    typedef block_a::alphabet_type alphabet_type;
+    typedef typename block_a::alphabet_type alphabet_type;
     static const constexpr bool has_members = true;
     static const constexpr uint32_t cap = block_a::cap;
     static const constexpr uint32_t scratch_blocks =

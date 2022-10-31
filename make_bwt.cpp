@@ -49,7 +49,7 @@ int main(int argc, char const* argv[]) {
     if (out_file_loc == 0) {
         std::cerr << "output file is required" << std::endl;
     }
-    bbwt::rlbwt::builder b(argv[out_file_loc]);
+    bbwt::custom_rlbwt::builder b(argv[out_file_loc]);
     if (in_file_loc) {
         std::ifstream in(argv[in_file_loc]);
         bbwt::file_reader reader(&in);

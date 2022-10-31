@@ -41,7 +41,7 @@ class byte_alphabet {
         std::memset(counts_, 0, sizeof(dtype) * A_SIZE);
     }
 
-    dtype p_sum(uint8_t c) {
+    dtype p_sum(uint8_t c) const {
         return counts_[c];
     }
 };

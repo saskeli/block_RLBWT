@@ -9,15 +9,21 @@
 #include "super_block.hpp"
 #include "two_byte_block.hpp"
 #include "byte_block.hpp"
+#include "byte_alphabet.hpp"
 
 namespace bbwt {
+
+template <uint32_t block_size = 32768>
+using byte_rlbwt = block_rlbwt<
+    super_block<two_byte_block<block_size, byte_alphabet<u_int32_t>, true>>,
+    byte_alphabet<uint64_t>>;
 
 using rlbwt = block_rlbwt<
     super_block<two_byte_block<4096, delta_alphabet<uint32_t, 10, 89>>>,
     delta_alphabet<uint64_t, 10, 89>>;
 
 using custom_rlbwt = block_rlbwt<
-    super_block<byte_block<4096, custom_alphabet<uint32_t>>>,
+    super_block<byte_block<8192, custom_alphabet<uint32_t>>>,
     custom_alphabet<uint64_t>>;
 
 template <uint32_t block_size = 4096>

@@ -10,7 +10,6 @@ class two_byte_block {
     typedef alphabet_type_ alphabet_type;
 
    private:
-    static_assert(alphabet_type::width < 8);
     static_assert(block_size <= ~uint32_t(0) >> 1);
 #ifndef __AVX2__
     static_assert(avx == false);

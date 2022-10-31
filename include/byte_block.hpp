@@ -42,20 +42,22 @@ class byte_block {
         uint64_t* offset = reinterpret_cast<uint64_t*>(scratch[0]);
         uint8_t* data = scratch[1];
         head = alphabet_type::convert(head);
-        data[offset[0]] |= head << SHIFT;
+        data[offset[0]] = head << SHIFT;
         if constexpr (alphabet_type::width < 7) {
             if (length <= BYTE_MASK) {
                 data[offset[0]++] |= length;
                 return offset[0];
             } else {
                 data[offset[0]++] |= (uint8_t(1) << (SHIFT - 1)) | (length & BYTE_MASK);
-                length >>= SHIFT - 1;
+                length >>= SHIFT - 2;
             }
         } else if constexpr (alphabet_type::width == 7) {
             if (length == 1) {
                 data[offset[0]++] |= length;
                 return offset[0];
             }
+        } if constexpr (alphabet_type::width == 8) {
+            offset[0]++;
         }
         if constexpr (block_size < uint32_t(1) << (8 + SHIFT - 1)) {
             data[offset[0]++] = length;
@@ -65,7 +67,7 @@ class byte_block {
             data[offset[0]++] = 0b10000000 | length;
             return offset[0];
         }
-        data[offset[0]++] = 0b01111111 | length;
+        data[offset[0]++] = 0b01111111 & length;
         length >>= 7;
         if constexpr (block_size < uint32_t(1) << (16 + SHIFT - 1)) {
             data[offset[0]++] = length;
@@ -75,9 +77,10 @@ class byte_block {
             data[offset[0]++] = 0b10000000 | length;
             return offset[0];
         }
-        data[offset[0]++] = 0b01111111 | length;
+        data[offset[0]++] = 0b01111111 & length;
         length >>= 7;
         data[offset[0]++] = length;
+        return offset[0];
     }
 
     uint8_t at(uint32_t location) const {
@@ -102,7 +105,7 @@ class byte_block {
             uint8_t current;
             uint32_t rl;
             read(i, current, rl);
-            if (location >= rl) {
+            if (location >= rl) [[likely]] {
                 location -= rl;
                 res += current == c ? rl : 0;
             } else {
@@ -126,6 +129,7 @@ class byte_block {
         const uint8_t* data = reinterpret_cast<const uint8_t*>(this);
         if constexpr (alphabet_type::width == 8) {
             c = data[i++];
+            rl = 0;
             return get<0>(i, rl);
         } else if constexpr (alphabet_type::width == 7) {
             c = data[i] >> 1;
@@ -133,13 +137,14 @@ class byte_block {
                 rl = 1;
                 return;
             } else {
+                rl = 0;
                 return get<0>(i, rl);
             }
         } else {
             c = data[i] >> SHIFT;
             rl = data[i] & BYTE_MASK;
-            if (data[i++] & (uint8_t(1) << (SHIFT - 1))) {
-                return get<SHIFT - 1>(i, rl);
+            if ((data[i++] >> (SHIFT - 1)) & 1) {
+                return get<SHIFT - 2>(i, rl);
             } else {
                 return;
             }
