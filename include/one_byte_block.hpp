@@ -137,7 +137,7 @@ class one_byte_block {
             }
         }
         i--;
-        uint8_t* vu = reinterpret_cast<uint8_t*>(vdata + i);
+        const uint8_t* vu = reinterpret_cast<const uint8_t*>(vdata + i);
         for (uint16_t ii = AVX_COUNT - 1; ii < AVX_COUNT; ii--) {
             uint8_t v = vu[ii] & MASK;
             v++;
