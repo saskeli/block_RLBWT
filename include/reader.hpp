@@ -39,6 +39,8 @@ class file_reader {
                 if (stream_->eof()) {
                     next_head_ = '\0';
                 }
+            } else {
+                next_head_ = '\0';
             }
         }
 

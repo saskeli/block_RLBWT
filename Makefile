@@ -33,7 +33,7 @@ make_bwt: make_bwt.cpp $(HEADERS)
 bench_bwt: bench_bwt.cpp $(HEADERS)
 	g++ $(CFLAGS) -DNDEBUG -Ofast -o bench_bwt bench_bwt.cpp
 
-make_alphabet_header: make_alphabet_header.cpp
+make_alphabet_header: make_alphabet_header.cpp include/reader.hpp
 	g++ $(CFLAGS) -DNDEBUG -Ofast -o make_alphabet_header make_alphabet_header.cpp
 
 cdebug: make_bwt.cpp bench_bwt.cpp $(HEADERS)

@@ -34,8 +34,6 @@ class block_rlbwt {
     typedef typename block_type::alphabet_type block_alphabet_type;
 
     block_rlbwt(std::string path) : bytes_(sizeof(block_rlbwt) + sizeof(alphabet_type)) {
-        std::cerr << "Readig \"root\" from: " << path << " (" << path.size()
-                  << ")" << std::endl;
         std::ifstream in_file;
         in_file.open(path, std::ios::binary | std::ios::in);
         if (in_file.fail()) {
@@ -66,7 +64,6 @@ class block_rlbwt {
                 read_super_block(prefix + "_" + std::to_string(i) + suffix));
         }
         bytes_ += s_blocks_.size() * sizeof(super_block_type*);
-        std::cerr << size_ << " elems read" << std::endl;
     }
 
     block_rlbwt() = delete;
@@ -107,7 +104,7 @@ class block_rlbwt {
         return s_blocks_[s_block_i]->at(i % SUPER_BLOCK_ELEMS);
     }
 
-    uint64_t rank(uint8_t c, uint64_t i) const {
+    uint64_t rank(uint64_t i, uint8_t c) const {
         if (i >= size_) [[unlikely]] {
             return p_sums_[block_count_].p_sum(c);
         }
@@ -117,13 +114,16 @@ class block_rlbwt {
         return res;
     }
 
+    uint8_t operator[](size_t i) const {
+        return at(i);
+    }
+
     uint64_t size() const { return size_; }
     uint64_t bytes() const { return bytes_; }
+    uint64_t serialize() const { return bytes_; }
 
    private:
     super_block_type* read_super_block(std::string path) {
-        std::cerr << "Reading superblock from: " << path << " (" << path.size()
-                  << ")" << std::endl;
         std::fstream in_file;
         in_file.open(path, std::ios::binary | std::ios::in);
         if (in_file.fail()) {

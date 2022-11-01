@@ -50,6 +50,9 @@ int main(int argc, char const* argv[]) {
     }
     bbwt::rlbwt bwt_a(in_file_path_a);
     bbwt::custom_rlbwt bwt_b(in_file_path_b);
+    //auto res = bwt_b.rank('A', 1000100);
+    //std::cerr << "rank(A, 1000100) = " << res << std::endl;
+    //exit(0);
     if (bwt_a.size() != bwt_b.size()) {
         std::cerr << "Indexes must have the same size!" << std::endl;
         exit(1);
@@ -83,7 +86,7 @@ int main(int argc, char const* argv[]) {
     for (auto q : queries) {
         std::cout << q.first << "\t" << q.second << "\t";
         auto start = high_resolution_clock::now();
-        uint64_t r_a = bwt_a.rank(q.first, q.second);
+        uint64_t r_a = bwt_a.rank(q.second, q.first);
         auto end = high_resolution_clock::now();
         double time = duration_cast<nanoseconds>(end - start).count();
         std::cout << time << "\t";
@@ -97,7 +100,7 @@ int main(int argc, char const* argv[]) {
         a_nanos_a += time;
 
         start = high_resolution_clock::now();
-        uint64_t r_b = bwt_b.rank(q.first, q.second);
+        uint64_t r_b = bwt_b.rank(q.second, q.first);
         end = high_resolution_clock::now();
         time = duration_cast<nanoseconds>(end - start).count();
         std::cout << time << "\t" << std::endl;
