@@ -63,8 +63,12 @@ class byte_block {
             }
         } if constexpr (alphabet_type::width == 8) {
             offset[0]++;
+            if constexpr (block_size <= uint32_t(1) << 8) {
+                data[offset[0]++] = length;
+                return offset[0];
+            }
         }
-        if constexpr (block_size < uint32_t(1) << (8 + SHIFT - 1)) {
+        if constexpr (block_size <= uint32_t(1) << (8 + SHIFT - 1)) {
             data[offset[0]++] = length;
             return offset[0];
         }
@@ -75,6 +79,10 @@ class byte_block {
         data[offset[0]++] = 0b01111111 & length;
         //std::cerr << "first full byte = " << std::bitset<8>(data[offset[0] - 1]) << std::endl;
         length >>= 7;
+        if constexpr ((block_size <= uint32_t(1) << (15)) && (alphabet_type::width == 8)) {
+            data[offset[0]++] = length;
+            return offset[0];
+        }
         if constexpr (block_size <= uint32_t(1) << (15 + SHIFT - 1)) {
             data[offset[0]++] = length;
             //std::cerr << "rest (" << length << ") fit in third word = " << std::bitset<8>(data[offset[0] - 1]) << std::endl;

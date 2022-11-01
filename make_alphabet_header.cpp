@@ -246,7 +246,7 @@ int main(int argc, char const* argv[]) {
             }
         }
     } else if (runs_loc || heads_loc) {
-        if (runs_loc == 0 && heads_loc == 0) {
+        if (runs_loc == 0 || heads_loc == 0) {
             std::cerr << "Both heads and run lengths are required" << std::endl;
             help();
         }
