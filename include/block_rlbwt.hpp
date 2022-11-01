@@ -120,7 +120,6 @@ class block_rlbwt {
 
     uint64_t size() const { return size_; }
     uint64_t bytes() const { return bytes_; }
-    uint64_t serialize() const { return bytes_; }
 
    private:
     super_block_type* read_super_block(std::string path) {
