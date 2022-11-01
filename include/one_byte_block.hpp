@@ -67,7 +67,7 @@ class one_byte_block {
             return avx_at(location);
         }
 #endif
-        uint8_t* data = reinterpret_cast<uint8_t*>(this);
+        const uint8_t* data = reinterpret_cast<const uint8_t*>(this);
         uint32_t i = 0;
         while (true) {
             uint8_t current = data[i] >> SHIFT;
@@ -123,7 +123,7 @@ class one_byte_block {
     }
 
     uint8_t avx_at(uint32_t location) const {
-        __m256i* vdata = reinterpret_cast<__m256i*>(this);
+        const __m256i* vdata = reinterpret_cast<const __m256i*>(this);
         uint32_t i = 0;
         uint32_t length = 0;
         while (true) {

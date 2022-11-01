@@ -125,7 +125,7 @@ class two_byte_block {
     }
 
     uint8_t avx_at(uint32_t location) const {
-        __m256i* vdata = reinterpret_cast<__m256i*>(this);
+        const __m256i* vdata = reinterpret_cast<const __m256i*>(this);
         uint32_t i = 0;
         uint32_t length = 0;
         while (true) {
