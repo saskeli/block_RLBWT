@@ -10,7 +10,7 @@ class file_reader {
 
     struct if_ref {
         uint32_t length;
-        char head;
+        uint8_t head;
     };
     class if_iterator {
        private:
@@ -18,13 +18,13 @@ class file_reader {
 
        public:
         uint32_t length_;
-        char head_;
+        uint8_t head_;
 
        private:
-        char next_head_;
+        uint8_t next_head_;
 
        public:
-        if_iterator(char head, std::istream* stream)
+        if_iterator(uint8_t head, std::istream* stream)
             : stream_(stream), length_(head ? 1 : 0), head_(head) {
             if (head) {
                 char c;
@@ -32,7 +32,7 @@ class file_reader {
                     if (c == head_) {
                         length_++;
                     } else {
-                        next_head_ = c;
+                        next_head_ = uint8_t(c);
                         break;
                     }
                 }
@@ -61,7 +61,7 @@ class file_reader {
                     if (c == head_) {
                         length_++;
                     } else {
-                        next_head_ = c;
+                        next_head_ = uint8_t(c);
                         break;
                     }
                 }
@@ -81,7 +81,7 @@ class file_reader {
     file_reader(std::istream* in_file) : in(in_file) {}
 
     if_iterator begin() {
-        char c = in->get();
+        uint8_t c = in->get();
         return if_iterator(c, in);
     }
 
@@ -95,7 +95,7 @@ class multi_reader {
 
     struct mf_ref {
         uint32_t length;
-        char head;
+        uint8_t head;
     };
     class mf_iterator {
        private:
@@ -104,10 +104,10 @@ class multi_reader {
 
        public:
         uint32_t length_;
-        char head_;
+        uint8_t head_;
         mf_iterator(std::ifstream* heads, std::ifstream* runs)
             : heads_(heads), runs_(runs) {
-            heads_->read(&head_, 1);
+            heads_->read(reinterpret_cast<char*>(&head_), 1);
             runs_->read(reinterpret_cast<char*>(&length_), sizeof(uint32_t));
             if (heads_->gcount() == 0 || runs_->gcount() == 0) {
                 head_ = '\0';
@@ -128,7 +128,7 @@ class multi_reader {
         }
 
         mf_iterator& operator++() {
-            heads_->read(&head_, 1);
+            heads_->read(reinterpret_cast<char*>(&head_), 1);
             runs_->read(reinterpret_cast<char*>(&length_), sizeof(uint32_t));
             if (heads_->gcount() == 0 || runs_->gcount() == 0) {
                 head_ = '\0';

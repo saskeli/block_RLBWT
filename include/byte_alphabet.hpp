@@ -21,13 +21,13 @@ class byte_alphabet {
     byte_alphabet() : counts_() {}
 
     byte_alphabet(const byte_alphabet& other) {
-        std::memcpy(counts_, other.counts_, A_SIZE * sizeof(dtype));
+        std::memcpy(counts_, other.counts_, sizeof(byte_alphabet<dtype>));
     }
 
     byte_alphabet(byte_alphabet&& other) = delete;
 
     byte_alphabet& operator=(const byte_alphabet& other) {
-        std::memcpy(counts_, other.counts_, A_SIZE * sizeof(dtype));
+        std::memcpy(counts_, other.counts_, sizeof(byte_alphabet<dtype>));
         return *this;
     }
 
