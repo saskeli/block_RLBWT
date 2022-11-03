@@ -50,7 +50,6 @@ class two_byte_block {
     uint32_t append(uint8_t head, uint32_t length, uint8_t** scratch) {
         uint64_t* offset = reinterpret_cast<uint64_t*>(scratch[0]);
         uint16_t* data = reinterpret_cast<uint16_t*>(scratch[1]);
-        head = alphabet_type::convert(head);
         if constexpr (LIMIT < cap) {
             while (length > LIMIT) {
                 data[offset[0]++] = (head << SHIFT) | MASK;
@@ -73,7 +72,7 @@ class two_byte_block {
             uint8_t current = data[i] >> SHIFT;
             uint16_t length = 1 + (data[i++] & MASK);
             if (length > location) [[unlikely]] {
-                return alphabet_type::revert(current);
+                return current;
             }
             location -= length;
         }
@@ -86,7 +85,6 @@ class two_byte_block {
         }
 #endif
         const uint16_t* data = reinterpret_cast<const uint16_t*>(this);
-        c = alphabet_type::convert(c);
         uint32_t res = 0;
         uint32_t i = 0;
         while (true) {
@@ -146,7 +144,7 @@ class two_byte_block {
             v++;
             length -= v;
             if (length <= location) [[unlikely]] {
-                return alphabet_type::revert(vu[ii] >> SHIFT);
+                return vu[ii] >> SHIFT;
             }
         }
         return 0;
@@ -154,7 +152,6 @@ class two_byte_block {
 
     uint32_t avx_rank(uint8_t c, uint32_t location) const {
         const __m256i* vdata = reinterpret_cast<const __m256i*>(this);
-        c = alphabet_type::convert(c);
         const __m256i ccomp = _mm256_set1_epi16(c);
         
         uint32_t res = 0;

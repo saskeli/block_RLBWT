@@ -101,10 +101,11 @@ class block_rlbwt {
         }
         uint64_t s_block_i = i / SUPER_BLOCK_ELEMS;
         //std::cerr << "Super block " << s_block_i << std::endl;
-        return s_blocks_[s_block_i]->at(i % SUPER_BLOCK_ELEMS);
+        return alphabet_type::revert(s_blocks_[s_block_i]->at(i % SUPER_BLOCK_ELEMS));
     }
 
     uint64_t rank(uint64_t i, uint8_t c) const {
+        c = alphabet_type::convert(c);
         if (i >= size_) [[unlikely]] {
             return p_sums_[block_count_].p_sum(c);
         }

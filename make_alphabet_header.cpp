@@ -6,6 +6,7 @@
 #include <algorithm>
 
 #include "include/reader.hpp"
+#include "include/byte_alphabet.hpp"
 
 static const constexpr uint64_t LIMIT = (uint64_t(1) << 32) - 1;
 static const constexpr uint64_t L16 = (uint64_t(1) << 16) - 1;
@@ -196,13 +197,13 @@ void output_code(std::vector<std::pair<uint64_t, uint8_t>>& counts) {
               << "    }\n\n"
               << "    custom_alphabet& operator=(custom_alphabet&& other) = delete;\n\n"
               << "    void add (uint8_t c, dtype v) {\n"
-              << "        counts[c_map[c]] += v;\n"
+              << "        counts[c] += v;\n"
               << "    }\n\n"
               << "    void clear() {\n"
               << "        std::memset(this, 0, sizeof(custom_alphabet));\n"
               << "    }\n\n"
               << "    dtype p_sum(uint8_t c) const {\n"
-              << "        return counts[c_map[c]];\n"
+              << "        return counts[c];\n"
               << "    }\n"
               << "};\n} // namespace bbwt" << std::endl;
 }
@@ -234,7 +235,7 @@ int main(int argc, char const* argv[]) {
     std::unordered_map<uint8_t, uint64_t> map;
     if (in_file_loc) {
         std::ifstream in(argv[in_file_loc]);
-        bbwt::file_reader reader(&in);
+        bbwt::file_reader<bbwt::byte_alphabet<uint32_t>> reader(&in);
         for (auto it : reader) {
             if (strip_new_line && (it.head == '\n')) {
                 continue;
@@ -254,7 +255,7 @@ int main(int argc, char const* argv[]) {
         std::ifstream runs;
         heads.open(argv[heads_loc], std::ios_base::in | std::ios_base::binary);
         runs.open(argv[runs_loc], std::ios_base::in | std::ios_base::binary);
-        bbwt::multi_reader reader(&heads, &runs);
+        bbwt::multi_reader<bbwt::byte_alphabet<uint32_t>> reader(&heads, &runs);
         for (auto it : reader) {
             if (strip_new_line && (it.head == '\n')) {
                 continue;

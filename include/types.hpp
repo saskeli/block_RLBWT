@@ -11,6 +11,7 @@
 #include "super_block.hpp"
 #include "two_byte_block.hpp"
 #include "genomics_alphabet.hpp"
+#include "acgtn_alphabet.hpp"
 
 namespace bbwt {
 
@@ -21,9 +22,13 @@ using byte_rlbwt =
 
 template <uint32_t block_size = 4096>
 using genomics_rlbwt = block_rlbwt<
-    super_block<d_block<two_byte_block<block_size, genomics_alphabet<uint32_t>>,
-                        one_byte_block<block_size, genomics_alphabet<uint32_t>, true>>>,
+    super_block<two_byte_block<block_size, genomics_alphabet<uint32_t>>>,
     genomics_alphabet<uint64_t>>;
+
+template <uint32_t block_size = 4096>
+using acgt_rlbwt = block_rlbwt<
+    super_block<two_byte_block<block_size, acgt_alphabet<uint32_t>>>,
+    acgt_alphabet<uint64_t>>;
 
 using rlbwt = block_rlbwt<
     super_block<two_byte_block<4096, delta_alphabet<uint32_t, 10, 89>>>,

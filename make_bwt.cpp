@@ -23,6 +23,8 @@ void help() {
     exit(0);
 }
 
+typedef bbwt::genomics_rlbwt<> bwt_type;
+
 int main(int argc, char const* argv[]) {
     if (argc < 2) {
         help();
@@ -50,10 +52,10 @@ int main(int argc, char const* argv[]) {
         std::cerr << "output file is required" << std::endl;
     }
     //block_rlbwt<bbwt::super_block<bbwt::two_byte_block<4096, bbwt::byte_alphabet<uint32_t>>>, bbwt::byte_alphabet<uint64_t>>
-    bbwt::byte_rlbwt<>::builder b(argv[out_file_loc]);
+    bwt_type::builder b(argv[out_file_loc]);
     if (in_file_loc) {
         std::ifstream in(argv[in_file_loc]);
-        bbwt::file_reader reader(&in);
+        bbwt::file_reader<bwt_type::alphabet_type> reader(&in);
         for (auto it : reader) {
             if (strip_new_line && (it.head == '\n')) {
                 continue;
@@ -69,7 +71,7 @@ int main(int argc, char const* argv[]) {
         std::ifstream runs;
         heads.open(argv[heads_loc], std::ios_base::in | std::ios_base::binary);
         runs.open(argv[runs_loc], std::ios_base::in | std::ios_base::binary);
-        bbwt::multi_reader reader(&heads, &runs);
+        bbwt::multi_reader<bbwt::byte_alphabet<uint32_t>> reader(&heads, &runs);
         for (auto it : reader) {
             if (strip_new_line && (it.head == '\n')) {
                 continue;
@@ -77,7 +79,7 @@ int main(int argc, char const* argv[]) {
             b.append(it.head, it.length);
         }
     } else {
-        bbwt::file_reader reader(&std::cin);
+        bbwt::file_reader<bbwt::byte_alphabet<uint32_t>> reader(&std::cin);
         for (auto it : reader) {
             if (strip_new_line && (it.head == '\n')) {
                 continue;

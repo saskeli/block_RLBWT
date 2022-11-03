@@ -50,7 +50,6 @@ class byte_block {
         #ifdef VERB
         std::cerr << length << " in bin is " << std::bitset<32>(length) << std::endl;
         #endif
-        head = alphabet_type::convert(head);
         data[offset[0]] = head << SHIFT;
         #ifdef VERB
         std::cerr << "head as written = " << std::bitset<8>(data[offset[0]]) << std::endl;
@@ -128,7 +127,7 @@ class byte_block {
             if (location >= rl) {
                 location -= rl;
             } else {
-                return alphabet_type::revert(c);
+                return c;
             }
         }
     }
@@ -137,7 +136,6 @@ class byte_block {
         #ifdef VERB
         std::cerr << "rank(" << c << ", " << location << ")" << std::endl;
         #endif
-        c = alphabet_type::convert(c);
         uint32_t res = 0;
         uint32_t i = 0;
         

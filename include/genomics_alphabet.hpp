@@ -47,7 +47,7 @@ class genomics_alphabet {
     genomics_alphabet& operator=(genomics_alphabet&& other) = delete;
 
     void add (uint8_t c, dtype v) {
-        counts[convert(c)] += v;
+        counts[c] += v;
     }
 
     void clear() {
@@ -55,7 +55,7 @@ class genomics_alphabet {
     }
 
     dtype p_sum(uint8_t c) const {
-        return counts[convert(c)];
+        return counts[c];
     }
 };
 } // namespace bbwt

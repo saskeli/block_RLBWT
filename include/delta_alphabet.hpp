@@ -33,7 +33,7 @@ class delta_alphabet {
     delta_alphabet& operator=(delta_alphabet&& other) = delete;
 
     void add(uint8_t c, dtype v) {
-        counts_[c - smallest] += v;
+        counts_[c] += v;
     }
 
     void clear() {
@@ -41,7 +41,7 @@ class delta_alphabet {
     }
 
     dtype p_sum(uint8_t c) const {
-        return counts_[c - smallest];
+        return counts_[c];
     }
 };
 } // namespace bbwt

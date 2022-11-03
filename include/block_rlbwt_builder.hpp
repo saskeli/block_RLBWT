@@ -65,6 +65,21 @@ class block_rlbwt_builder {
     }
 
     void append(uint8_t head, uint32_t length) {
+        r_append(alphabet_type::convert(head), length);
+    }
+
+    void finalize() {
+        if (block_elems_) {
+            commit(true);
+        }
+        if (blocks_in_super_block_) {
+            write_super_block();
+        }
+        write_root();
+    }
+
+   private:
+    void r_append(uint8_t head, uint32_t length) {
         if (length + block_elems_ < bwt_type::cap) [[likely]] {
             block_cumulative_.add(head, length);
             super_block_cumulative_.add(head, length);
@@ -88,17 +103,6 @@ class block_rlbwt_builder {
         }
     }
 
-    void finalize() {
-        if (block_elems_) {
-            commit(true);
-        }
-        if (blocks_in_super_block_) {
-            write_super_block();
-        }
-        write_root();
-    }
-
-   private:
     void write_super_block() {
         std::cerr << "Writing super block" << std::endl;
         std::cerr << "Total of " << elems_ << " elements read" << std::endl;

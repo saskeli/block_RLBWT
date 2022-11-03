@@ -4,6 +4,7 @@
 #include <iostream>
 
 namespace bbwt {
+template<class alphabet_type>
 class file_reader {
    private:
     std::istream* in;
@@ -29,7 +30,7 @@ class file_reader {
             if (head) {
                 char c;
                 while (stream_->get(c)) {
-                    if (c == head_) {
+                    if (alphabet_type::convert(c) == alphabet_type::convert(head_)) {
                         length_++;
                     } else {
                         next_head_ = uint8_t(c);
@@ -58,7 +59,7 @@ class file_reader {
                 length_ = 1;
                 char c;
                 while (stream_->get(c)) {
-                    if (c == head_) {
+                    if (alphabet_type::convert(c) == alphabet_type::convert(head_)) {
                         length_++;
                     } else {
                         next_head_ = uint8_t(c);
@@ -88,6 +89,7 @@ class file_reader {
     if_iterator end() { return if_iterator('\0', in); }
 };
 
+template<class alphabet_type>
 class multi_reader {
    private:
     std::ifstream* heads_;
@@ -112,6 +114,15 @@ class multi_reader {
             if (heads_->gcount() == 0 || runs_->gcount() == 0) {
                 head_ = '\0';
                 length_ = 0;
+                return;
+            }
+            int c = heads_->peek();
+            while (c != EOF && alphabet_type::convert(c) == alphabet_type::convert(head_)) {
+                heads_->read(reinterpret_cast<char*>(&head_), 1);
+                uint32_t len;
+                runs_->read(reinterpret_cast<char*>(&len), sizeof(uint32_t));
+                length_ += len;
+                c = heads_->peek();
             }
         }
 
@@ -133,6 +144,15 @@ class multi_reader {
             if (heads_->gcount() == 0 || runs_->gcount() == 0) {
                 head_ = '\0';
                 length_ = 0;
+                return *this;
+            }
+            int c = heads_->peek();
+            while (c != EOF && alphabet_type::convert(c) == alphabet_type::convert(head_)) {
+                heads_->read(reinterpret_cast<char*>(&head_), 1);
+                uint32_t len;
+                runs_->read(reinterpret_cast<char*>(&len), sizeof(uint32_t));
+                length_ += len;
+                c = heads_->peek();
             }
             return *this;
         }

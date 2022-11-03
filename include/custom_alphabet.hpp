@@ -49,7 +49,7 @@ class custom_alphabet {
     custom_alphabet& operator=(custom_alphabet&& other) = delete;
 
     void add (uint8_t c, dtype v) {
-        counts[c_map[c]] += v;
+        counts[c] += v;
     }
 
     void clear() {
@@ -57,7 +57,7 @@ class custom_alphabet {
     }
 
     dtype p_sum(uint8_t c) const {
-        return counts[c_map[c]];
+        return counts[c];
     }
 };
 } // namespace bbwt

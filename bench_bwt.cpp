@@ -48,8 +48,8 @@ int main(int argc, char const* argv[]) {
         std::cerr << "Input files are required\n" << std::endl;
         help();
     }
-    bbwt::rlbwt bwt_a(in_file_path_a);
-    bbwt::custom_rlbwt bwt_b(in_file_path_b);
+    bbwt::acgt_rlbwt<> bwt_a(in_file_path_a);
+    bbwt::genomics_rlbwt<> bwt_b(in_file_path_b);
     //auto res = bwt_b.rank('A', 1000100);
     //std::cerr << "rank(A, 1000100) = " << res << std::endl;
     //exit(0);
