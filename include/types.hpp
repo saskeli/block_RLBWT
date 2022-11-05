@@ -26,6 +26,13 @@ using genomics_rlbwt = block_rlbwt<
     genomics_alphabet<uint64_t>>;
 
 template <uint32_t block_size = 4096>
+using dgen_rlbwt = block_rlbwt<
+    super_block<
+        d_block<two_byte_block<block_size, genomics_alphabet<uint32_t>>,
+                one_byte_block<block_size, genomics_alphabet<uint32_t>, true>>>,
+    genomics_alphabet<uint64_t>>;    
+
+template <uint32_t block_size = 4096>
 using acgt_rlbwt = block_rlbwt<
     super_block<two_byte_block<block_size, acgt_alphabet<uint32_t>>>,
     acgt_alphabet<uint64_t>>;
