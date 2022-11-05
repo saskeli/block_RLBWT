@@ -48,10 +48,11 @@ int main(int argc, char const* argv[]) {
         std::cerr << "Input files are required\n" << std::endl;
         help();
     }
-    bbwt::acgt_rlbwt<> bwt_a(in_file_path_a);
-    bbwt::genomics_rlbwt<> bwt_b(in_file_path_b);
-    //auto res = bwt_b.rank('A', 1000100);
-    //std::cerr << "rank(A, 1000100) = " << res << std::endl;
+    bbwt::genomics_rlbwt<> bwt_a(in_file_path_a);
+    bbwt::byte_rlbwt<> bwt_b(in_file_path_b);
+    //bwt_a.print();
+    //auto res = bwt_a.rank(15000, 'A');
+    //std::cerr << "rank(A, 15000) = " << res << std::endl;
     //exit(0);
     if (bwt_a.size() != bwt_b.size()) {
         std::cerr << "Indexes must have the same size!" << std::endl;
@@ -93,7 +94,7 @@ int main(int argc, char const* argv[]) {
         r_nanos_a += time;
 
         start = high_resolution_clock::now();
-        uint64_t a_a = bwt_a.at(q.second);
+        uint8_t a_a = bwt_a.at(q.second);
         end = high_resolution_clock::now();
         time = duration_cast<nanoseconds>(end - start).count();
         std::cout << time << "\t";
@@ -107,7 +108,7 @@ int main(int argc, char const* argv[]) {
         r_nanos_b += time;
 
         start = high_resolution_clock::now();
-        uint64_t a_b = bwt_a.at(q.second);
+        uint8_t a_b = bwt_a.at(q.second);
         end = high_resolution_clock::now();
         time = duration_cast<nanoseconds>(end - start).count();
         std::cout << time << "\t";
@@ -115,13 +116,13 @@ int main(int argc, char const* argv[]) {
 
         if (r_a != r_b) {
             r_fails++;
-            std::cout << "n\t";
+            std::cout << r_a << "-" << r_b << "\t";
         } else {
             std::cout << "y\t";
         }
         if (a_a != a_b) {
             a_fails++;
-            std::cout << "n" << std::endl;
+            std::cout << a_a << "-" << a_b << std::endl;
         } else {
             std::cout << "y" << std::endl;
         }

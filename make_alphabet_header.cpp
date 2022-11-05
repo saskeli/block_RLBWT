@@ -129,7 +129,12 @@ void output_space_optimized_code(std::vector<std::pair<uint64_t, uint8_t>>& coun
     std::cout << "        } else {\n"
               << "            return c" << counts.size() - 1 << ";\n"
               << "        }\n"
-              << "    }\n"
+              << "    }\n\n"
+              << "    void print() {\n";
+    for (uint32_t i = 0; i < counts.size(); i++) {
+        std::cout << "        std::cerr << " << i << " << c" << i << " << std::endl;\n";
+    }
+    std::cout << "    }\n"
               << "};\n} // namespace bbwt" << std::endl;
 }
 
@@ -204,6 +209,11 @@ void output_code(std::vector<std::pair<uint64_t, uint8_t>>& counts) {
               << "    }\n\n"
               << "    dtype p_sum(uint8_t c) const {\n"
               << "        return counts[c];\n"
+              << "    }\n\n"
+              << "    void print() {\n"
+              << "        for (uint16_t i = 0; i < " << min_index << "; i++) {\n"
+              << "            std::cerr << i << \": \" << counts[i] << std::endl;\n"
+              << "        }\n"
               << "    }\n"
               << "};\n} // namespace bbwt" << std::endl;
 }

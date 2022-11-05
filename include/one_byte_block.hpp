@@ -109,6 +109,21 @@ class one_byte_block {
     }
 
     void clear() {}
+
+    void print(uint32_t sb) const {
+        const uint8_t* data = reinterpret_cast<const uint8_t*>(this);
+        uint32_t i = 0;
+        while (true) {
+            uint8_t current = data[i] >> SHIFT;
+            uint8_t length = 1 + (data[i++] & MASK);
+            std::cerr << "run " << int(current) << ", " << length << std::endl;
+            if (sb > length) [[likely]] {
+                sb -= length;
+            } else {
+                return;
+            }
+        }
+    }
 #ifdef __AVX2__
   private:
 

@@ -84,17 +84,21 @@ class two_byte_block {
             avx_rank(c, location);
         }
 #endif
+        //std::cerr << "rank(" << int(c) << ", " << location << ")" << std::endl;
         const uint16_t* data = reinterpret_cast<const uint16_t*>(this);
         uint32_t res = 0;
         uint32_t i = 0;
         while (true) {
             uint8_t current = data[i] >> SHIFT;
             uint16_t length = 1 + (data[i++] & MASK);
+            //std::cerr << " run " << int(current) << ", " << length << std::endl;
             if (location >= length) [[likely]] {
                 location -= length;
                 res += current == c ? length : 0;
+                //std::cerr << "  " << location << " left, with " << res << " seen." << std::endl;
             } else {
                 res += current == c ? location : 0;
+                //std::cerr << "  done, with " << res << " seen." << std::endl;
                 return res;
             }
         }
@@ -110,6 +114,21 @@ class two_byte_block {
     }
 
     void clear() {}
+
+    void print(uint32_t sb) const {
+        const uint16_t* data = reinterpret_cast<const uint16_t*>(this);
+        uint32_t i = 0;
+        while (true) {
+            uint8_t current = data[i] >> SHIFT;
+            uint16_t length = 1 + (data[i++] & MASK);
+            //std::cerr << " run " << int(current) << ", " << length << std::endl;
+            if (sb > length) [[likely]] {
+                sb -= length;
+            } else {
+                return;
+            }
+        }
+    }
 #ifdef __AVX2__
    private:
     inline uint32_t sum32(__m256i a) const {

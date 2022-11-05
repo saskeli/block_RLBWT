@@ -37,9 +37,9 @@ class acgt_alphabet {
         }
     }
   private:
-    dtype counts[5];
+    dtype counts_[5];
   public:
-    acgt_alphabet() : counts() {}
+    acgt_alphabet() : counts_() {}
 
     acgt_alphabet(const acgt_alphabet& other) {
         std::memcpy(this, &other, sizeof(acgt_alphabet));
@@ -54,7 +54,7 @@ class acgt_alphabet {
     acgt_alphabet& operator=(acgt_alphabet&& other) = delete;
 
     void add (uint8_t c, dtype v) {
-        counts[c] += v;
+        counts_[c] += v;
     }
 
     void clear() {
@@ -62,7 +62,13 @@ class acgt_alphabet {
     }
 
     dtype p_sum(uint8_t c) const {
-        return counts[c];
+        return counts_[c];
+    }
+
+    void print() const {
+        for (uint16_t i = 0; i < 5; i++) {
+            std::cerr << revert(i) << "(" << i << "): " << counts_[i] << std::endl;
+        }
     }
 };
 } // namespace bbwt

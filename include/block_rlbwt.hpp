@@ -106,11 +106,13 @@ class block_rlbwt {
 
     uint64_t rank(uint64_t i, uint8_t c) const {
         c = alphabet_type::convert(c);
+        //std::cerr << "rank(" << int(c) << ", " << i << ")" << std::endl;
         if (i >= size_) [[unlikely]] {
             return p_sums_[block_count_].p_sum(c);
         }
         uint64_t s_block_i = i / SUPER_BLOCK_ELEMS;
         uint64_t res = p_sums_[s_block_i].p_sum(c);
+        //std::cerr << res << " super block limit" << std::endl;
         res += s_blocks_[s_block_i]->rank(c, i % SUPER_BLOCK_ELEMS);
         return res;
     }
@@ -121,6 +123,16 @@ class block_rlbwt {
 
     uint64_t size() const { return size_; }
     uint64_t bytes() const { return bytes_; }
+
+    void print() const {
+        for (uint32_t i = 0; i < block_count_; i++) {
+            uint64_t s = (i + 1) * SUPER_BLOCK_ELEMS;
+            s = s > size_ ? size_ % SUPER_BLOCK_ELEMS : SUPER_BLOCK_ELEMS;
+            std::cerr << "S block " << i << ":" << std::endl;
+            p_sums_[i].print();
+            s_blocks_[i]->print(s);
+        }
+    }
 
    private:
     super_block_type* read_super_block(std::string path) {

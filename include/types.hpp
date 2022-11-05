@@ -35,8 +35,12 @@ using rlbwt = block_rlbwt<
     delta_alphabet<uint64_t, 10, 89>>;
 
 using custom_rlbwt = block_rlbwt<
-    super_block<byte_block<131072, genomics_alphabet<uint32_t>>>,
-    genomics_alphabet<uint64_t>>;
+    super_block<two_byte_block<4096, custom_alphabet<uint32_t>>>,
+    custom_alphabet<uint64_t>>;
+
+//using custom_rlbwt = block_rlbwt<
+//    super_block<byte_block<131072, genomics_alphabet<uint32_t>>>,
+//    genomics_alphabet<uint64_t>>;
 
 template <uint32_t block_size = 4096>
 using dyn_rlbwt = block_rlbwt<

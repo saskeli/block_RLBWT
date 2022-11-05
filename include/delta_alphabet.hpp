@@ -43,5 +43,11 @@ class delta_alphabet {
     dtype p_sum(uint8_t c) const {
         return counts_[c];
     }
+
+    void print() {
+        for (uint16_t i = 0; i < A_SIZE; i++) {
+            std::cerr << i << ": " << counts_[i] << std::endl;
+        }
+    }
 };
 } // namespace bbwt

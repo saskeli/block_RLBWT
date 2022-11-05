@@ -23,7 +23,7 @@ void help() {
     exit(0);
 }
 
-typedef bbwt::genomics_rlbwt<> bwt_type;
+typedef bbwt::byte_rlbwt<> bwt_type;
 
 int main(int argc, char const* argv[]) {
     if (argc < 2) {
@@ -51,7 +51,6 @@ int main(int argc, char const* argv[]) {
     if (out_file_loc == 0) {
         std::cerr << "output file is required" << std::endl;
     }
-    //block_rlbwt<bbwt::super_block<bbwt::two_byte_block<4096, bbwt::byte_alphabet<uint32_t>>>, bbwt::byte_alphabet<uint64_t>>
     bwt_type::builder b(argv[out_file_loc]);
     if (in_file_loc) {
         std::ifstream in(argv[in_file_loc]);

@@ -99,7 +99,7 @@ class block_rlbwt_builder {
             block_bytes_ = current_block_.append(head, fill, scratch_);
             elems_ += fill;
             commit();
-            return append(head, length - fill);
+            return r_append(head, length - fill);
         }
     }
 

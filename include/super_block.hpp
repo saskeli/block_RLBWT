@@ -34,12 +34,14 @@ class super_block {
 
     uint32_t rank(uint8_t c, uint32_t i) const {
         uint32_t block_i = i / cap;
+        //std::cerr << "rank(" << int(c) << ", " << i << ")" << std::endl;
         __builtin_prefetch(data() + offsets_[block_i]);
-        const block_type* block =
-            reinterpret_cast<const block_type*>(data() + offsets_[block_i]);
         const alphabet_type* alpha = reinterpret_cast<const alphabet_type*>(
             data() + offsets_[block_i] - sizeof(alphabet_type));
         uint32_t res = alpha->p_sum(c);
+        //std::cerr << res << " from previous blocks " << std::endl;
+        const block_type* block =
+            reinterpret_cast<const block_type*>(data() + offsets_[block_i]);
         res += block->rank(c, i % cap);
         return res;
     }
@@ -54,6 +56,27 @@ class super_block {
 
     alphabet_type* get_psums(uint32_t i) const {
         return reinterpret_cast<alphabet_type*>(data() + offsets_[i] - sizeof(alphabet_type));
+    }
+
+    void print(uint64_t s) const {
+        bool done = false;
+        for (uint32_t i = 0; i < blocks; i++) {
+            std::cerr << "sub-block " << i << ": " << std::endl;
+            uint64_t sb = cap * (i + 1);
+            if (sb > s) {
+                sb = s % cap;
+                done = true;
+            }
+            sb = cap;
+            uint32_t block_i = (sb - 1) / cap;
+            const alphabet_type* alpha = reinterpret_cast<const alphabet_type*>(
+                data() + offsets_[block_i] - sizeof(alphabet_type));
+            alpha->print();
+            const block_type* block =
+                reinterpret_cast<const block_type*>(data() + offsets_[block_i]);
+            block->print(sb);
+            if (done) break;
+        }
     }
 
    private:

@@ -101,6 +101,14 @@ class d_block {
         return bytes;
     }
 
+    void print(uint32_t sb) {
+        if (b_type) {
+            reinterpret_cast<const block_b*>(&b_type + 1)->print(sb);
+        } else {
+            reinterpret_cast<const block_a*>(&b_type + 1)->print(sb);
+        }
+    }
+
     void clear() {}
 };
 }  // namespace bbwt

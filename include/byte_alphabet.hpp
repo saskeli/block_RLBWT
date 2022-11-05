@@ -44,5 +44,11 @@ class byte_alphabet {
     dtype p_sum(uint8_t c) const {
         return counts_[c];
     }
+
+    void print() const {
+        for (uint16_t i = 0; i < 256; i++) {
+            std::cerr << i << ": " << counts_[i] << std::endl;
+        }
+    }
 };
 } // namespace bbwt

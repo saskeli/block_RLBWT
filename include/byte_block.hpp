@@ -176,6 +176,22 @@ class byte_block {
 
     void clear() {}
 
+    void print(uint32_t sb) const {
+        uint32_t i = 0;
+        while (true) {
+            uint8_t current;
+            uint32_t rl;
+            read(i, current, rl);
+            rl++;
+            std::cerr << " run " << alphabet_type::revert(current) << ", " << rl << std::endl;
+            if (sb > rl) [[likely]] {
+                sb -= rl;
+            } else {
+                return;
+            }
+        }
+    }
+
    private:
     inline void read(uint32_t& i, uint8_t& c, uint32_t& rl) const {
         const uint8_t* data = reinterpret_cast<const uint8_t*>(this);
