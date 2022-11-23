@@ -167,7 +167,7 @@ void output_exact(std::vector<std::pair<uint64_t, uint8_t>>& counts) {
               << "    }\n"
               << "    template <class o_t>\n"
               << "    static void write_statics(o_t& out) {\n"
-              << "        out.write(reinterpret_cast<char*>(&width, 1);\n"
+              << "        out.write(reinterpret_cast<const char*>(&width), 1);\n"
               << "        uint32_t size = sizeof(custom_alphabet);\n"
               << "        out.write(reinterpret_cast<char*>(&size), 4);\n"
               << "        out.write(reinterpret_cast<const char*>(c_map), 256);\n"
