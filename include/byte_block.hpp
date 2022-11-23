@@ -9,8 +9,6 @@
 namespace bbwt {
 template <uint32_t block_size, class alphabet_type_>
 class byte_block {
-   private:
-    static_assert(block_size < uint32_t(1) << (32 - alphabet_type_::width));
    public:
     typedef alphabet_type_ alphabet_type;
     static const constexpr bool has_members = false;
@@ -29,10 +27,6 @@ class byte_block {
         }
     }
 
-  private: 
-    static const constexpr uint8_t SHIFT = 8 - alphabet_type::width;
-    static const constexpr uint8_t BYTE_MASK = SHIFT > 0 ? (uint8_t(1) << (SHIFT - 1)) - 1 : 0;
-  public:
     byte_block() {}
 
     byte_block(const byte_block& other) = delete;
@@ -41,6 +35,8 @@ class byte_block {
     byte_block& operator=(const byte_block&) = delete;
 
     uint32_t append(uint8_t head, uint32_t length, uint8_t** scratch) {
+        const uint8_t SHIFT = 8 - alphabet_type::width;
+        const uint8_t BYTE_MASK = SHIFT > 0 ? (uint8_t(1) << (SHIFT - 1)) - 1 : 0;
         #ifdef VERB
         std::cerr << "append(" << head << ", " << length << ")" << std::endl;
         #endif
@@ -54,7 +50,7 @@ class byte_block {
         #ifdef VERB
         std::cerr << "head as written = " << std::bitset<8>(data[offset[0]]) << std::endl;
         #endif
-        if constexpr (alphabet_type::width < 7) {
+        if (alphabet_type::width < 7) {
             if (length <= BYTE_MASK) {
                 data[offset[0]++] |= length;
                 return offset[0];
@@ -65,12 +61,12 @@ class byte_block {
                 std::cerr << "with continuation = " << std::bitset<8>(data[offset[0] - 1]) << std::endl;
                 #endif
             }
-        } else if constexpr (alphabet_type::width == 7) {
+        } else if (alphabet_type::width == 7) {
             if (length == 1) {
                 data[offset[0]++] |= length;
                 return offset[0];
             }
-        } if constexpr (alphabet_type::width == 8) {
+        } if (alphabet_type::width == 8) {
             offset[0]++;
             if constexpr (block_size <= uint32_t(1) << 8) {
                 data[offset[0]++] = length;
@@ -93,7 +89,7 @@ class byte_block {
         std::cerr << "first full byte = " << std::bitset<8>(data[offset[0] - 1]) << std::endl;
         #endif
         length >>= 7;
-        if constexpr ((block_size <= uint32_t(1) << (15)) && (alphabet_type::width == 8)) {
+        if ((block_size <= uint32_t(1) << (15)) && (alphabet_type::width == 8)) {
             data[offset[0]++] = length;
             #ifdef VERB
             std::cerr << "8: rest (" << length << ") fit in third word = " << std::bitset<8>(data[offset[0] - 1]) << std::endl;
@@ -175,6 +171,8 @@ class byte_block {
     }
 
     void clear() {}
+    static void write_statics(std::fstream&) {return; }
+    static uint64_t load_statics(std::fstream&) {return 0; }
 
     void print(uint32_t sb) const {
         uint32_t i = 0;
@@ -194,19 +192,21 @@ class byte_block {
 
    private:
     inline void read(uint32_t& i, uint8_t& c, uint32_t& rl) const {
+        const uint8_t SHIFT = 8 - alphabet_type::width;
+        const uint8_t BYTE_MASK = SHIFT > 0 ? (uint8_t(1) << (SHIFT - 1)) - 1 : 0;
         const uint8_t* data = reinterpret_cast<const uint8_t*>(this);
-        if constexpr (alphabet_type::width == 8) {
+        if (alphabet_type::width == 8) {
             c = data[i++];
             rl = 0;
-            return get<0>(i, rl);
-        } else if constexpr (alphabet_type::width == 7) {
+            return get(i, rl, 0);
+        } else if (alphabet_type::width == 7) {
             c = data[i] >> 1;
             if (data[i++] & 0b00000001) {
                 rl = 1;
                 return;
             } else {
                 rl = 0;
-                return get<0>(i, rl);
+                return get(i, rl, 0);
             }
         } else {
             c = data[i] >> SHIFT;
@@ -215,17 +215,16 @@ class byte_block {
             std::cerr << " last bits: " << std::bitset<32>(rl) << std::endl;
             #endif
             if ((data[i++] >> (SHIFT - 1)) & 1) {
-                return get<SHIFT - 1>(i, rl);
+                return get(i, rl, SHIFT - 1);
             } else {
                 return;
             }
         }
     }
 
-    template<uint8_t offset>
-    inline void get(uint32_t& i, uint32_t& rl) const {
+    inline void get(uint32_t& i, uint32_t& rl, uint8_t offset) const {
         const uint8_t* data = reinterpret_cast<const uint8_t*>(this);
-        if constexpr (block_size <= (uint32_t(1) << (8 + offset))) {
+        if (block_size <= (uint32_t(1) << (8 + offset))) {
             rl |= data[i++] << offset;
             return;
         }
@@ -240,7 +239,7 @@ class byte_block {
             #endif
             return;
         }
-        if constexpr (block_size <= (uint32_t(1) << (15 + offset))) {
+        if (block_size <= (uint32_t(1) << (15 + offset))) {
             rl |= data[i++] << (offset + 7);
             #ifdef VERB
             std::cerr << " final byte: " << std::bitset<8>(data[i - 1]) << std::endl;

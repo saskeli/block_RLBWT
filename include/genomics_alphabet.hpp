@@ -61,5 +61,7 @@ class genomics_alphabet {
             std::cerr << int(revert(i)) << ": " << counts_[i] << std::endl;
         }
     }
+    static uint64_t write_statics(std::fstream&) {return 0; }
+    static uint64_t load_statics(std::fstream&) {return 0; }
 };
 }  // namespace bbwt

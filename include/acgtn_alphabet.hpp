@@ -70,5 +70,8 @@ class acgt_alphabet {
             std::cerr << revert(i) << "(" << i << "): " << counts_[i] << std::endl;
         }
     }
+
+    static void write_statics(std::fstream&) {return; }
+    static uint64_t load_statics(std::fstream&) {return 0; }
 };
 } // namespace bbwt

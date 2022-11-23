@@ -37,7 +37,7 @@ class super_block {
         //std::cerr << "rank(" << int(c) << ", " << i << ")" << std::endl;
         __builtin_prefetch(data() + offsets_[block_i]);
         const alphabet_type* alpha = reinterpret_cast<const alphabet_type*>(
-            data() + offsets_[block_i] - sizeof(alphabet_type));
+            data() + offsets_[block_i] - alphabet_type::size());
         uint32_t res = alpha->p_sum(c);
         //std::cerr << res << " from previous blocks " << std::endl;
         const block_type* block =
@@ -55,7 +55,7 @@ class super_block {
     }
 
     alphabet_type* get_psums(uint32_t i) const {
-        return reinterpret_cast<alphabet_type*>(data() + offsets_[i] - sizeof(alphabet_type));
+        return reinterpret_cast<alphabet_type*>(data() + offsets_[i] - alphabet_type::size());
     }
 
     void print(uint64_t s) const {
@@ -70,7 +70,7 @@ class super_block {
             sb = cap;
             uint32_t block_i = (sb - 1) / cap;
             const alphabet_type* alpha = reinterpret_cast<const alphabet_type*>(
-                data() + offsets_[block_i] - sizeof(alphabet_type));
+                data() + offsets_[block_i] - alphabet_type::size());
             alpha->print();
             const block_type* block =
                 reinterpret_cast<const block_type*>(data() + offsets_[block_i]);
@@ -78,6 +78,9 @@ class super_block {
             if (done) break;
         }
     }
+
+    static uint64_t write_statics(std::fstream&) {return 0; }
+    static uint64_t load_statics(std::fstream&) {return 0; }
 
    private:
     const uint8_t* data() const {

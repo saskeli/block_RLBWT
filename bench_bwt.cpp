@@ -1,3 +1,5 @@
+//#define VERB
+
 #include <iostream>
 #include <vector>
 #include <random>
@@ -48,10 +50,10 @@ int main(int argc, char const* argv[]) {
         std::cerr << "Input files are required\n" << std::endl;
         help();
     }
-    bbwt::genomics_rlbwt<> bwt_a(in_file_path_a);
-    bbwt::byte_rlbwt<> bwt_b(in_file_path_b);
-    //bwt_a.print();
-    //auto res = bwt_a.rank(15000, 'A');
+    bbwt::two_byte<> bwt_a(in_file_path_a);
+    bbwt::vbyte<> bwt_b(in_file_path_b);
+    //bwt_b.print();
+    //auto res = bwt_b.rank(15000, 'A');
     //std::cerr << "rank(A, 15000) = " << res << std::endl;
     //exit(0);
     if (bwt_a.size() != bwt_b.size()) {
@@ -104,7 +106,7 @@ int main(int argc, char const* argv[]) {
         uint64_t r_b = bwt_b.rank(q.second, q.first);
         end = high_resolution_clock::now();
         time = duration_cast<nanoseconds>(end - start).count();
-        std::cout << time << "\t" << std::endl;
+        std::cout << time << "\t";
         r_nanos_b += time;
 
         start = high_resolution_clock::now();

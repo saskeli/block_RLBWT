@@ -8,18 +8,12 @@ class one_byte_block {
   public:
     typedef alphabet_type_ alphabet_type;
   private:
-    static_assert(alphabet_type::width < 8);
     static_assert(block_size <= ~uint32_t(0) >> 1);
 #ifndef __AVX2__
     static_assert(avx == false);
 #endif
-    static const constexpr uint16_t SHIFT = 8 - alphabet_type::width;
-    static const constexpr uint16_t LIMIT = uint16_t(1) << SHIFT;
-    static const constexpr uint16_t MASK = LIMIT - 1;
 #ifdef __AVX2__
     static const constexpr uint32_t AVX_COUNT = 32;
-    inline static const __m256i CMASK = _mm256_set1_epi8((uint16_t(1) << alphabet_type::width) - 1);
-    inline static const __m256i VMASK = _mm256_set1_epi8(MASK);
     inline static const __m256i ONES = _mm256_set1_epi8(1);
     inline static const __m256i ZEROS = _mm256_setzero_si256();
 #endif
@@ -27,8 +21,7 @@ class one_byte_block {
     static const constexpr bool has_members = false;
     static const constexpr uint32_t cap = block_size;
     static const constexpr uint32_t scratch_blocks = 2;
-    static const constexpr uint32_t min_size =
-        block_size / LIMIT + (block_size % LIMIT ? 1 : 0);
+    static const constexpr uint32_t min_size = 2;
     static const constexpr uint32_t padding_bytes = avx ? 32 : 0;
 
     static const constexpr uint32_t max_size = block_size;
@@ -48,9 +41,12 @@ class one_byte_block {
     one_byte_block& operator=(const one_byte_block&) = delete;
 
     uint32_t append(uint8_t head, uint32_t length, uint8_t** scratch) {
+        const uint16_t SHIFT = 8 - alphabet_type::width;
+        const uint16_t LIMIT = uint16_t(1) << SHIFT;
+        const uint16_t MASK = LIMIT - 1;
         uint64_t* offset = reinterpret_cast<uint64_t*>(scratch[0]);
         uint8_t* data = reinterpret_cast<uint8_t*>(scratch[1]);
-        if constexpr (LIMIT < cap) {
+        if (LIMIT < cap) {
             while (length > LIMIT) {
                 data[offset[0]++] = (head << SHIFT) | MASK;
                 length -= LIMIT;
@@ -65,7 +61,10 @@ class one_byte_block {
         if  constexpr (avx) {
             return avx_at(location);
         }
-#endif
+#endif  
+        const uint16_t SHIFT = 8 - alphabet_type::width;
+        const uint16_t LIMIT = uint16_t(1) << SHIFT;
+        const uint16_t MASK = LIMIT - 1;
         const uint8_t* data = reinterpret_cast<const uint8_t*>(this);
         uint32_t i = 0;
         while (true) {
@@ -84,6 +83,9 @@ class one_byte_block {
             return avx_rank(c, location);
         }
 #endif
+        const uint16_t SHIFT = 8 - alphabet_type::width;
+        const uint16_t LIMIT = uint16_t(1) << SHIFT;
+        const uint16_t MASK = LIMIT - 1;
         const uint8_t* data = reinterpret_cast<const uint8_t*>(this);
         uint32_t res = 0;
         uint32_t i = 0;
@@ -109,9 +111,14 @@ class one_byte_block {
     }
 
     void clear() {}
+    static void write_statics(std::fstream&) {return; }
+    static uint64_t load_statics(std::fstream&) {return 0; }
 
     void print(uint32_t sb) const {
         const uint8_t* data = reinterpret_cast<const uint8_t*>(this);
+        const uint16_t SHIFT = 8 - alphabet_type::width;
+        const uint16_t LIMIT = uint16_t(1) << SHIFT;
+        const uint16_t MASK = LIMIT - 1;
         uint32_t i = 0;
         while (true) {
             uint8_t current = data[i] >> SHIFT;
@@ -136,6 +143,10 @@ class one_byte_block {
     }
 
     uint8_t avx_at(uint32_t location) const {
+        const uint16_t SHIFT = 8 - alphabet_type::width;
+        const uint16_t LIMIT = uint16_t(1) << SHIFT;
+        const uint16_t MASK = LIMIT - 1;
+        const __m256i VMASK = _mm256_set1_epi8(MASK);
         const __m256i* vdata = reinterpret_cast<const __m256i*>(this);
         uint32_t i = 0;
         uint32_t length = 0;
@@ -165,6 +176,11 @@ class one_byte_block {
     uint32_t avx_rank(uint8_t c, uint32_t location) const {
         const __m256i* vdata = reinterpret_cast<const __m256i*>(this);
         const __m256i ccomp = _mm256_set1_epi8(c);
+        const uint16_t SHIFT = 8 - alphabet_type::width;
+        const uint16_t LIMIT = uint16_t(1) << SHIFT;
+        const uint16_t MASK = LIMIT - 1;
+        const __m256i CMASK = _mm256_set1_epi8((uint16_t(1) << alphabet_type::width) - 1);
+        const __m256i VMASK = _mm256_set1_epi8(MASK);
 
         uint32_t res = 0;
         uint32_t length = 0;

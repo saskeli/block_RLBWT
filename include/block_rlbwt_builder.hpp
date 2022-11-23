@@ -31,6 +31,7 @@ class block_rlbwt_builder {
     uint32_t block_elems_;
     uint32_t block_bytes_;
     uint32_t blocks_in_super_block_;
+    std::fstream out_;
 
    public:
     block_rlbwt_builder(std::string out_file)
@@ -55,6 +56,7 @@ class block_rlbwt_builder {
             prefix_ = out_file.substr(0, loc);
             suffix_ = out_file.substr(loc);
         }
+        out_.open(prefix_ + "_data" + suffix_, std::ios::binary | std::ios::out);
         block_counts_.push_back(super_block_cumulative_);
         current_super_block_ = (uint8_t*)calloc(super_block_size_, 1);
         scratch_ =
@@ -75,6 +77,7 @@ class block_rlbwt_builder {
         if (blocks_in_super_block_) {
             write_super_block();
         }
+        out_.close();
         write_root();
     }
 
@@ -116,24 +119,21 @@ class block_rlbwt_builder {
                   << " bytes = " << double(tot_bytes) / (uint64_t(1) << 30)
                   << " GiB" << std::endl;
 
-        std::fstream out;
-        out.open(prefix_ + "_" + std::to_string(block_counts_.size()) + suffix_,
-                 std::ios::binary | std::ios::out);
         uint64_t file_bytes =
             super_block_bytes_ +
             sizeof(uint64_t) * bwt_type::super_block_type::blocks;
-        out.write(reinterpret_cast<char*>(&file_bytes), sizeof(uint64_t));
-        out.write(reinterpret_cast<char*>(block_offsets_.data()),
+        std::cerr << file_bytes << " bytes" << std::endl;
+        out_.write(reinterpret_cast<char*>(&file_bytes), sizeof(uint64_t));
+        out_.write(reinterpret_cast<char*>(block_offsets_.data()),
                   sizeof(uint64_t) * block_offsets_.size());
         for (uint64_t i = block_offsets_.size();
              i < bwt_type::super_block_type::blocks; i++) {
             uint64_t zero = 0;
-            out.write(reinterpret_cast<char*>(&zero), sizeof(uint64_t));
+            out_.write(reinterpret_cast<char*>(&zero), sizeof(uint64_t));
         }
-        out.write(reinterpret_cast<char*>(current_super_block_),
+        out_.write(reinterpret_cast<char*>(current_super_block_),
                   super_block_bytes_);
         block_counts_.push_back(super_block_cumulative_);
-        out.close();
 
         block_cumulative_.clear();
         block_offsets_.clear();
@@ -193,12 +193,15 @@ class block_rlbwt_builder {
 
         std::fstream out;
         out.open(prefix_ + suffix_, std::ios::binary | std::ios::out);
+        alphabet_type::write_statics(out);
+        block_alphabet_type::write_statics(out);
+        bwt_type::super_block_type::write_statics(out);
+        block_type::write_statics(out);
         uint64_t bytes = sizeof(alphabet_type) * block_counts_.size();
         out.write(reinterpret_cast<char*>(&bytes), sizeof(uint64_t));
         out.write(reinterpret_cast<char*>(&elems_), sizeof(uint64_t));
         out.write(reinterpret_cast<char*>(&n_blocks), sizeof(uint64_t));
-        out.write(reinterpret_cast<char*>(block_counts_.data()),
-                  sizeof(alphabet_type) * block_counts_.size());
+        out.write(reinterpret_cast<char*>(block_counts_.data()), bytes);
         out.close();
 
         std::cerr << sizeof(uint64_t) << " + " << sizeof(uint64_t) << " + "
