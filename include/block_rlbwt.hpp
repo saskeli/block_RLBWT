@@ -22,6 +22,7 @@ class block_rlbwt {
     uint64_t size_;
     uint64_t block_count_;
     uint64_t bytes_;
+    uint64_t char_counts_[257];
     uint8_t* p_sums_;
     std::vector<super_block_type*> s_blocks_;
 
@@ -56,7 +57,7 @@ class block_rlbwt {
         p_sums_ = (uint8_t*)std::malloc(data_bytes);
         in_file.read(reinterpret_cast<char*>(p_sums_), data_bytes);
         bytes_ += data_bytes;
-        
+        in_file.read(reinterpret_cast<char*>(char_counts_), sizeof(uint64_t) * 257);
         in_file.close();
 
         std::string prefix;
@@ -116,6 +117,22 @@ class block_rlbwt {
         }
         uint64_t s_block_i = i / SUPER_BLOCK_ELEMS;
         return alphabet_type::revert(s_blocks_[s_block_i]->at(i % SUPER_BLOCK_ELEMS));
+    }
+
+    uint64_t count(const std::string& pattern) const {
+        uint8_t c = pattern[pattern.size() - 1];
+        uint64_t a = char_counts_[c];
+        uint64_t b = char_counts_[uint16_t(c) + 1];
+        uint64_t ret = b  - a;
+        for (size_t i = pattern.size() - 2; i < pattern.size() && ret > 0; i--) {
+            c = pattern[i];
+            a = rank(a, c);
+            b = rank(b, c);
+            ret = b - a;
+            a += char_counts_[c];
+            b += char_counts_[c];
+        }
+        return ret;
     }
 
     uint64_t rank(uint64_t i, uint8_t c) const {

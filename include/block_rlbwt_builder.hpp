@@ -16,6 +16,7 @@ class block_rlbwt_builder {
     typedef typename bwt_type::block_alphabet_type block_alphabet_type;
     typedef typename bwt_type::block_type block_type;
 
+    uint64_t char_counts_[257];
     std::string prefix_;
     std::string suffix_;
     std::vector<alphabet_type> block_counts_;
@@ -35,7 +36,8 @@ class block_rlbwt_builder {
 
    public:
     block_rlbwt_builder(std::string out_file)
-        : block_counts_(),
+        : char_counts_(),
+          block_counts_(),
           super_block_cumulative_(),
           block_offsets_(),
           block_cumulative_(),
@@ -67,7 +69,33 @@ class block_rlbwt_builder {
     }
 
     void append(uint8_t head, uint32_t length) {
-        r_append(alphabet_type::convert(head), length);
+        char_counts_[head] += length;
+        head = alphabet_type::convert(head);
+        while (length) {
+            if (length + block_elems_ < bwt_type::cap) {
+                block_cumulative_.add(head, length);
+                super_block_cumulative_.add(head, length);
+                block_bytes_ = current_block_.append(head, length, scratch_);
+                block_elems_ += length;
+                elems_ += length;
+                return;
+            } else if (length + block_elems_ == bwt_type::cap) [[unlikely]] {
+                block_cumulative_.add(head, length);
+                super_block_cumulative_.add(head, length);
+                block_bytes_ = current_block_.append(head, length, scratch_);
+                elems_ += length;
+                commit();
+                return;
+            } else {
+                uint32_t fill = bwt_type::cap - block_elems_;
+                block_cumulative_.add(head, fill);
+                super_block_cumulative_.add(head, fill);
+                block_bytes_ = current_block_.append(head, fill, scratch_);
+                elems_ += fill;
+                commit();
+                length -= fill;
+            }
+        }
     }
 
     void finalize() {
@@ -78,34 +106,16 @@ class block_rlbwt_builder {
             write_super_block();
         }
         out_.close();
+        uint64_t p_v = 0;
+        for (size_t i = 0; i < 257; i++) {
+            uint64_t tmp = char_counts_[i];
+            char_counts_[i] = p_v;
+            p_v += tmp;
+        }
         write_root();
     }
 
    private:
-    void r_append(uint8_t head, uint32_t length) {
-        if (length + block_elems_ < bwt_type::cap) [[likely]] {
-            block_cumulative_.add(head, length);
-            super_block_cumulative_.add(head, length);
-            block_bytes_ = current_block_.append(head, length, scratch_);
-            block_elems_ += length;
-            elems_ += length;
-        } else if (length + block_elems_ == bwt_type::cap) [[unlikely]] {
-            block_cumulative_.add(head, length);
-            super_block_cumulative_.add(head, length);
-            block_bytes_ = current_block_.append(head, length, scratch_);
-            elems_ += length;
-            commit();
-        } else {
-            uint32_t fill = bwt_type::cap - block_elems_;
-            block_cumulative_.add(head, fill);
-            super_block_cumulative_.add(head, fill);
-            block_bytes_ = current_block_.append(head, fill, scratch_);
-            elems_ += fill;
-            commit();
-            return r_append(head, length - fill);
-        }
-    }
-
     void write_super_block() {
         std::cerr << "Writing super block" << std::endl;
         std::cerr << "Total of " << elems_ << " elements read" << std::endl;
@@ -122,7 +132,6 @@ class block_rlbwt_builder {
         uint64_t file_bytes =
             super_block_bytes_ +
             sizeof(uint64_t) * bwt_type::super_block_type::blocks;
-        std::cerr << file_bytes << " bytes" << std::endl;
         out_.write(reinterpret_cast<char*>(&file_bytes), sizeof(uint64_t));
         out_.write(reinterpret_cast<char*>(block_offsets_.data()),
                   sizeof(uint64_t) * block_offsets_.size());
@@ -144,7 +153,7 @@ class block_rlbwt_builder {
     }
 
     void commit(bool last_block = false) {
-        if (super_block_bytes_ + block_bytes_ + sizeof(block_alphabet_type) > super_block_size_) {
+        if (super_block_bytes_ + block_bytes_ + block_alphabet_type::size() > super_block_size_) {
             uint64_t new_size = super_block_bytes_ + block_bytes_;
             if (!last_block) {
                 new_size +=
@@ -153,8 +162,8 @@ class block_rlbwt_builder {
             }
             current_super_block_ =
                 (uint8_t*)realloc(current_super_block_, new_size);
-            std::memset(current_super_block_ + super_block_size_, 0,
-                        new_size - super_block_size_);
+            //std::memset(current_super_block_ + super_block_size_, 0,
+            //            new_size - super_block_size_);
             super_block_size_ = new_size;
         }
         
@@ -202,6 +211,7 @@ class block_rlbwt_builder {
         out.write(reinterpret_cast<char*>(&elems_), sizeof(uint64_t));
         out.write(reinterpret_cast<char*>(&n_blocks), sizeof(uint64_t));
         out.write(reinterpret_cast<char*>(block_counts_.data()), bytes);
+        out.write(reinterpret_cast<char*>(char_counts_), sizeof(uint64_t) * 257);
         out.close();
 
         std::cerr << sizeof(uint64_t) << " + " << sizeof(uint64_t) << " + "
