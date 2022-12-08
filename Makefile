@@ -27,6 +27,9 @@ bench_bwt: bench_bwt.cpp $(HEADERS)
 make_alphabet_header: make_alphabet_header.cpp include/reader.hpp
 	g++ $(CFLAGS) -DNDEBUG -Ofast -o make_alphabet_header make_alphabet_header.cpp
 
+make_test_data: make_test_data.cpp $(HEADERS)
+	g++ $(CFLAGS) -DNDEBUG -Ofast -o make_test_data make_test_data.cpp
+
 count_matches: count_matches.cpp $(HEADERS)
 	g++ $(CFLAGS) -DNDEBUG -Ofast -o count_matches count_matches.cpp
 
@@ -36,4 +39,4 @@ debug: make_bwt.cpp bench_bwt.cpp $(HEADERS)
 	g++ $(CFLAGS) -DDEBUG -g -o count_matches count_matches.cpp
 
 clean:
-	rm -f make_bwt bench_bwt count_matches make_alphabet_header
+	rm -f make_bwt bench_bwt count_matches make_alphabet_header count_matches make_test_data

@@ -135,6 +135,11 @@ class block_rlbwt {
         return ret;
     }
 
+    uint64_t LF(const uint64_t& i) const {
+        uint8_t c = at(i);
+        return char_counts_[c] + rank(i, c);
+    }
+
     uint64_t rank(uint64_t i, uint8_t c) const {
         c = alphabet_type::convert(c);
         if (i >= size_) [[unlikely]] {
