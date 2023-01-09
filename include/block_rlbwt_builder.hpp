@@ -4,6 +4,8 @@
 #include <iostream>
 #include <vector>
 #include <bitset>
+#include <cmath>
+#include <random>
 
 namespace bbwt {
 template <class bwt_type>
@@ -17,9 +19,12 @@ class block_rlbwt_builder {
     typedef typename bwt_type::block_type block_type;
 
     uint64_t char_counts_[257];
+    uint32_t run_count_;
+    uint32_t dense_blocks_;
     std::string prefix_;
     std::string suffix_;
     std::vector<alphabet_type> block_counts_;
+    std::vector<bool> block_reprs_;
     alphabet_type super_block_cumulative_;
     std::vector<uint64_t> block_offsets_;
     block_alphabet_type block_cumulative_;
@@ -37,7 +42,10 @@ class block_rlbwt_builder {
    public:
     block_rlbwt_builder(std::string out_file)
         : char_counts_(),
+          run_count_(0),
+          dense_blocks_(0),
           block_counts_(),
+          block_reprs_(),
           super_block_cumulative_(),
           block_offsets_(),
           block_cumulative_(),
@@ -72,6 +80,7 @@ class block_rlbwt_builder {
         char_counts_[head] += length;
         head = alphabet_type::convert(head);
         while (length) {
+            run_count_++;
             if (length + block_elems_ < bwt_type::cap) {
                 block_cumulative_.add(head, length);
                 super_block_cumulative_.add(head, length);
@@ -115,6 +124,29 @@ class block_rlbwt_builder {
         write_root();
     }
 
+    void gen_queries(std::ostream& out, uint32_t n_queries) {
+        uint64_t char_count = char_counts_[256];
+        std::vector<uint8_t> chars;
+        for (uint16_t i = 0; i < 256; i++) {
+            if (char_counts_[i + 1] > char_counts_[i]) {
+                chars.push_back(uint8_t(i));
+            }
+        }
+
+        std::mt19937 mt;
+        std::uniform_int_distribution<unsigned long long> i_gen(0, char_count - 1);
+        std::uniform_int_distribution<uint8_t> c_gen(0, chars.size() - 1);
+
+        for (uint32_t i = 0; i < n_queries; i++) {
+            uint64_t idx = i_gen(mt);
+            uint8_t c = chars[c_gen(mt)];
+            bool dense = block_reprs_[idx / bwt_type::cap];
+            out.write(reinterpret_cast<char*>(&idx), sizeof(uint64_t));
+            out.write(reinterpret_cast<char*>(&c), sizeof(uint8_t));
+            out.write(reinterpret_cast<char*>(&dense), sizeof(bool));
+        }
+    }
+
    private:
     void write_super_block() {
         std::cerr << "Writing super block" << std::endl;
@@ -153,6 +185,13 @@ class block_rlbwt_builder {
     }
 
     void commit(bool last_block = false) {
+        if (run_count_ >= 4 * std::log2(bwt_type::cap)) {
+            block_reprs_.push_back(true);
+            dense_blocks_++;
+        } else {
+            block_reprs_.push_back(false);
+        }
+        run_count_ = 0;
         if (super_block_bytes_ + block_bytes_ + block_alphabet_type::size() > super_block_size_) {
             uint64_t new_size = super_block_bytes_ + block_bytes_;
             if (!last_block) {
@@ -185,8 +224,8 @@ class block_rlbwt_builder {
         if (!last_block && blocks_in_super_block_ < BLOCKS_IN_SUPER_BLOCK)
             [[likely]] {
             std::memcpy(current_super_block_ + super_block_bytes_,
-                        &block_cumulative_, sizeof(block_alphabet_type));
-            super_block_bytes_ += sizeof(block_alphabet_type);
+                        &block_cumulative_, block_alphabet_type::size());
+            super_block_bytes_ += block_alphabet_type::size();
         } else {
             write_super_block();
         }
@@ -195,9 +234,12 @@ class block_rlbwt_builder {
     void write_root() {
         uint64_t n_blocks = block_counts_.size() - 1;
 
-        std::cerr << "Writing \"root\" to file" << std::endl;
-        std::cerr << " Seen " << n_blocks << " super blocks" << std::endl;
-        std::cerr << " containing a total of " << elems_ << " elements"
+        std::cerr << "Writing \"root\" to file\n"
+                  << " Seen " << n_blocks << " super blocks\n"
+                  << " containing a total of " << elems_ << " elements\n"
+                  << " " << dense_blocks_ << " dense blocks out of "
+                  << block_reprs_.size() << " total blocks ("
+                  << 100.0 * dense_blocks_ / block_reprs_.size() << " %)"
                   << std::endl;
 
         std::fstream out;

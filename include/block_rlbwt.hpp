@@ -93,6 +93,7 @@ class block_rlbwt {
         p_sums_ = std::exchange(other.p_sums_, nullptr);
         s_blocks_ =
             std::exchange(other.s_blocks_, std::vector<super_block_type*>());
+        std::memcpy(char_counts_, other.char_counts_, sizeof(uint64_t) * 257);
     }
 
     block_rlbwt& operator=(block_rlbwt&& other) {
@@ -101,6 +102,7 @@ class block_rlbwt {
         p_sums_ = std::exchange(other.p_sums_, nullptr);
         s_blocks_ =
             std::exchange(other.s_blocks_, std::vector<super_block_type*>());
+        std::memcpy(char_counts_, other.char_counts_, sizeof(uint64_t) * 257);
         return *this;
     }
 
@@ -172,10 +174,9 @@ class block_rlbwt {
     super_block_type* read_super_block(std::fstream& in_file) {
         uint64_t in_bytes = 0;
         in_file.read(reinterpret_cast<char*>(&in_bytes), sizeof(uint64_t));
-        in_bytes += block_type::padding_bytes;
-        uint8_t* data = (uint8_t*)std::malloc(in_bytes);
+        uint8_t* data = (uint8_t*)std::malloc(in_bytes + block_type::padding_bytes);
         if constexpr (block_type::padding_bytes) {
-            std::memset(data + (in_bytes - block_type::padding_bytes), 0, block_type::padding_bytes);
+            std::memset(data + in_bytes, 0, block_type::padding_bytes);
         }
         in_file.read(reinterpret_cast<char*>(data), in_bytes);
         bytes_ += in_bytes;

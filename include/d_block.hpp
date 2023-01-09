@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <cstring>
+#include <cmath>
 
 #include "debug.hpp"
 
@@ -30,7 +31,7 @@ class d_block {
                                                    : block_b::max_size);
     static constexpr uint64_t scratch_size(uint32_t i) {
         if (i == 0) {
-            return sizeof(block_a) + sizeof(block_b);
+            return sizeof(block_a) + sizeof(block_b) + sizeof(uint32_t);
         }
         if (i > block_a::scratch_blocks) {
             i--;
@@ -50,18 +51,26 @@ class d_block {
     d_block& operator=(const d_block&) = delete;
 
     uint32_t append(uint8_t head, uint32_t length, uint8_t** scratch) {
+        scratch[0][sizeof(block_a) + sizeof(block_b)] += 1;
         uint32_t a_size = reinterpret_cast<block_a*>(scratch[0])
                               ->append(head, length, scratch + 1);
         uint32_t b_size =
             reinterpret_cast<block_b*>(scratch[0] + sizeof(block_a))
                 ->append(head, length, scratch + 1 + block_a::scratch_blocks);
-        if (b_size < a_size) {
+        if (scratch[0][sizeof(block_a) + sizeof(block_b)] >= std::log2(block_a::cap)) {
             b_type = 1;
             return b_size;
         } else {
             b_type = 0;
             return a_size;
         }
+        /*if (b_size < a_size) {
+            b_type = 1;
+            return b_size;
+        } else {
+            b_type = 0;
+            return a_size;
+        }*/
     }
 
     uint8_t at(uint32_t location) const {
@@ -110,5 +119,12 @@ class d_block {
     }
 
     void clear() {}
+    static void write_statics(std::fstream& out) {
+        block_a::write_statics(out);
+        block_b::write_statics(out);
+    }
+    static uint64_t load_statics(std::fstream& in) {
+        return block_a::load_statics(in) + block_b::load_statics(in);
+    }
 };
 }  // namespace bbwt

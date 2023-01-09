@@ -15,6 +15,7 @@ void help() {
     std::cout << "   bwt_file   Path to block rlbwt root element.\n";
     std::cout << "   patterns   Path to file containing patterns.\n";
     std::cout << "   -s         Block rlbwt is space optimized.\n";
+    std::cout << "   -c         Blocks contains a constant number of runs.\n";
     std::cout << "Bwt file and at least one pattern are required.\n\n";
     std::cout << "Example: count_matches bwt.bin Einstein" << std::endl;
     exit(0);
@@ -51,9 +52,12 @@ int main(int argc, char const* argv[]) {
     std::string in_file_path = "";
     std::string patterns = "";
     bool space_op = false;
+    bool run_block = false;
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-s") == 0) {
             space_op = true;
+        } else if (strcmp(argv[i], "-c") == 0) {
+            run_block = true;
         } else if (in_file_path.size() == 0) {
             in_file_path = argv[i];
         } else {
@@ -64,7 +68,9 @@ int main(int argc, char const* argv[]) {
     std::cerr << "looking for patterns from " << patterns << " in " << in_file_path << std::endl;
     std::cout << "Pattern\tcount\ttime" << std::endl;
     double t;
-    if (space_op) {
+    if (run_block) {
+        t = bench<bbwt::run<>>(in_file_path, p);
+    } else if (space_op) {
         t = bench<bbwt::vbyte<>>(in_file_path, p);
     } else {
         t = bench<bbwt::two_byte<>>(in_file_path, p);

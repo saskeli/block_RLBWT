@@ -2,11 +2,11 @@ from random import Random
 import sys
 
 def main(n):
-    chars = "abcd"
+    chars = "ACGT"
     o = 0
     rand = Random()
     while (o < n):
-        rep = rand.randint(1, 4096)
+        rep = rand.randint(1, 16)
         print(rep * rand.choice(chars), end="")
         o += rep
 

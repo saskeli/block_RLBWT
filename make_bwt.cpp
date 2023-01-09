@@ -7,34 +7,34 @@
 #include "include/types.hpp"
 
 void help() {
-    std::cout << "Create RLBWT data structure and output it to file.\n\n";
-    std::cout
-        << "Usage: make_rlbwt [-i file_name] [-h heads] [-r runs] <out_file>\n";
-    std::cout << "   <out_file>     Path to file to write output to.\n";
-    std::cout << "   -i file_name   File containing text to encode. (overrides "
-                 "-h and -r.)\n";
-    std::cout << "   -h heads       File containing run heads as bytes.\n";
-    std::cout << "   -r runs        File containing run lengths as 32-bit "
-                 "integers.\n";
-    std::cout << "   -s             Sacrifice speed to pack better.\n";
-    std::cout << "   -n             Strip new line characters from input.\n\n";
-    std::cout << "Ouput file is required.\n"
-              << "If no input file is given, input will be read from standard "
-                 "input.\n"
-              << "If file_name is given, input will be read as a byte-stream "
-                 "from file.\n"
-              << "If heads and runs are given, heads are read as byte-stream "
-                 "and runs as stream of 32-bit integers.\n\n";
+    std::cout << "Create RLBWT data structure and output it to file.\n\n"
+        << "Usage: make_rlbwt [-i file_name] [-h heads] [-r runs] <out_file>\n"
+        << "   <out_file>     Path to file to write output to.\n"
+        << "   -i file_name   File containing text to encode. (overrides -h and -r.)\n"
+        << "   -h heads       File containing run heads as bytes.\n"
+        << "   -r runs        File containing run lengths as 32-bit integers.\n"
+        << "   -s             Sacrifice speed to pack better.\n"
+        << "   -c             Use constant number of runs instead of symbols.\n"
+        << "   -q count       Generate binary query sequence to std::cout.\n"
+        << "   -n             Strip new line characters from input.\n\n";
+    std::cout 
+        << "Ouput file is required.\n"
+        << "If no input file is given, input will be read from standard input.\n"
+        << "If file_name is given, input will be read as a byte-stream from file.\n"
+        << "If heads and runs are given, heads are read as byte-stream "
+        << "and runs as stream of 32-bit integers.\n\n";
     std::cout << "Example: make_rlbwt -i bwt.txt rlbwt.bin" << std::endl;
     exit(0);
 }
 
 typedef bbwt::two_byte_build<> bwt_type_a;
 typedef bbwt::vbyte_build<> bwt_type_b;
+typedef bbwt::run_build<> bwt_type_r;
 
 template <class bwt_t>
 void build(char const* argv[], size_t in_file_loc, size_t heads_loc,
-           size_t runs_loc, size_t out_file_loc, bool strip_new_line) {
+           size_t runs_loc, size_t out_file_loc, bool strip_new_line, 
+           uint32_t n_queries) {
     typename bwt_t::builder b(argv[out_file_loc]);
     if (in_file_loc) {
         std::ifstream in(argv[in_file_loc]);
@@ -71,8 +71,11 @@ void build(char const* argv[], size_t in_file_loc, size_t heads_loc,
         }
     }
     b.finalize();
-    std::cout << "a_blocks: " << bbwt::a_blocks
-              << ", b_blocks: " << bbwt::b_blocks << std::endl;
+    //std::cerr << "a_blocks: " << bbwt::a_blocks
+    //          << ", b_blocks: " << bbwt::b_blocks << std::endl;
+    if (n_queries) {
+        b.gen_queries(std::cout, n_queries);
+    }
 }
 
 int main(int argc, char const* argv[]) {
@@ -86,6 +89,8 @@ int main(int argc, char const* argv[]) {
     size_t out_file_loc = 0;
     bool strip_new_line = false;
     bool small = false;
+    bool const_runs = false;
+    uint32_t n_queries = 0;
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-i") == 0) {
             in_file_loc = ++i;
@@ -97,6 +102,10 @@ int main(int argc, char const* argv[]) {
             strip_new_line = true;
         } else if (strcmp(argv[i], "-s") == 0) {
             small = true;
+        } else if (strcmp(argv[i], "-q") == 0) {
+            std::sscanf(argv[++i], "%u", &n_queries);
+        } else if (strcmp(argv[i], "-c") == 0) {
+            const_runs = true;
         } else {
             out_file_loc = i;
         }
@@ -104,10 +113,12 @@ int main(int argc, char const* argv[]) {
     if (out_file_loc == 0) {
         std::cerr << "output file is required" << std::endl;
     }
-    if (small) {
-        build<bwt_type_b>(argv, in_file_loc, heads_loc, runs_loc, out_file_loc, strip_new_line);
+    if (const_runs) {
+        build<bwt_type_r>(argv, in_file_loc, heads_loc, runs_loc, out_file_loc, strip_new_line, n_queries);
+    } else if (small) {
+        build<bwt_type_b>(argv, in_file_loc, heads_loc, runs_loc, out_file_loc, strip_new_line, n_queries);
     } else {
-        build<bwt_type_a>(argv, in_file_loc, heads_loc, runs_loc, out_file_loc, strip_new_line);
+        build<bwt_type_a>(argv, in_file_loc, heads_loc, runs_loc, out_file_loc, strip_new_line, n_queries);
     }
     return 0;
 }

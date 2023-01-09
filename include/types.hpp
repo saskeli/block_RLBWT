@@ -13,6 +13,8 @@
 //#include "genomics_alphabet.hpp"
 //#include "acgtn_alphabet.hpp"
 #include "alphabet.hpp"
+#include "vbyte_runs.hpp"
+#include "naive_run_rlbwt.hpp"
 
 namespace bbwt {
 
@@ -77,5 +79,25 @@ template <uint32_t block_size = 16384>
 using vbyte = block_rlbwt<
     super_block<byte_block<block_size, alphabet<uint32_t>>>,
     alphabet<uint64_t>>;
+
+template <uint32_t block_size = 16384>
+using dyn_build = block_rlbwt<
+    super_block<
+        d_block<two_byte_block<block_size, custom_alphabet<uint32_t>>,
+                one_byte_block<block_size, custom_alphabet<uint32_t>, true>>>,
+    custom_alphabet<uint64_t>>;
+
+template <uint32_t block_size = 16384>
+using dyn = block_rlbwt<
+    super_block<
+        d_block<two_byte_block<block_size, alphabet<uint32_t>>,
+                one_byte_block<block_size, alphabet<uint32_t>, true>>>,
+    alphabet<uint64_t>>;
+
+template <uint32_t n_runs = 1024>
+using run_build = naive_run_rlbwt<vbyte_runs<n_runs, custom_alphabet<uint64_t>>>;
+
+template <uint32_t n_runs = 1024>
+using run = naive_run_rlbwt<vbyte_runs<n_runs, alphabet<uint64_t>>>;
 
 }  // namespace bbwt
