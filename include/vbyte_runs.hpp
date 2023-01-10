@@ -71,6 +71,7 @@ class vbyte_runs {
             uint8_t c;
             uint32_t rl;
             read(i, c, rl);
+            rl++;
             if (location >= rl) {
                 location -= rl;
             } else {
@@ -87,6 +88,7 @@ class vbyte_runs {
             uint8_t current;
             uint32_t rl;
             read(i, current, rl);
+            rl++;
             if (location >= rl) [[likely]] {
                 location -= rl;
                 res += current == c ? rl : 0;
@@ -121,6 +123,7 @@ class vbyte_runs {
             uint8_t current;
             uint32_t rl;
             read(i, current, rl);
+            rl++;
             std::cerr << " run " << alphabet_type::revert(current) << ", " << rl << std::endl;
             if (rl < syms) {
                 syms -= rl;
@@ -141,10 +144,8 @@ class vbyte_runs {
             rl = 0;
         } else if (alphabet_type::width == 7) {
             c = data[i] >> 1;
-            if (data[i++] & 0b00000001) {
-                rl = 0;
-            } else {
-                rl = 1;
+            rl = 0;
+            if ((data[i++] & 0b00000001) == 0) {
                 return;
             }
         } else {

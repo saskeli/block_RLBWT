@@ -23,7 +23,6 @@ class naive_run_rlbwt_builder {
     uint8_t** scratch_;
     block_type current_block_;
     uint64_t block_elems_;
-    uint64_t block_bytes_;
     uint64_t offset_;
     std::fstream out_;
 
@@ -36,7 +35,6 @@ class naive_run_rlbwt_builder {
           elems_(0),
           current_block_(),
           block_elems_(0),
-          block_bytes_(0),
           offset_(alphabet_type::size()) {
         size_t loc = out_file.find_last_of('.');
         if (loc == std::string::npos) {
@@ -52,13 +50,14 @@ class naive_run_rlbwt_builder {
         for (size_t i = 0; i < block_type::scratch_blocks; i++) {
             scratch_[i] = (uint8_t*)calloc(block_type::scratch_size(i), 1);
         }
+        out_.write(reinterpret_cast<char*>(&cumulative_), alphabet_type::size());
     }
 
     void append(uint8_t head, uint32_t length) {
         char_counts_[head] += length;
         head = alphabet_type::convert(head);
         cumulative_.add(head, length);
-        block_bytes_ = current_block_.append(head, length, scratch_);
+        current_block_.append(head, length, scratch_);
         block_elems_ += length;
         ++run_count_;
         if (run_count_ >= block_type::cap) {
@@ -108,6 +107,7 @@ class naive_run_rlbwt_builder {
         run_count_ = 0;
         block_offsets_.push_back({elems_, offset_});
         elems_ += block_elems_;
+        block_elems_ = 0;
         offset_ += current_block_.write(out_, scratch_);
         current_block_.clear();
         for (size_t i = 0; i < block_type::scratch_blocks; i++) {

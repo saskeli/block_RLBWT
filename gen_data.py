@@ -1,18 +1,18 @@
 from random import Random
 import sys
 
-def main(n):
+def main(runs, spread):
     chars = "ACGT"
-    o = 0
     rand = Random()
-    while (o < n):
-        rep = rand.randint(1, 16)
+    for _ in range(runs):
+        rep = rand.randint(1, spread)
         print(rep * rand.choice(chars), end="")
-        o += rep
-
 
 if __name__ == "__main__":
-    n = 2 << 32
+    runs = 2 << 32
+    spread = 1000
     if len(sys.argv) > 1:
-        n = int(sys.argv[1])
-    main(n)
+        runs = int(sys.argv[1])
+    if len(sys.argv) > 2:
+        spread = int(sys.argv[2])
+    main(runs, spread)

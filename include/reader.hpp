@@ -29,16 +29,17 @@ class file_reader {
             : stream_(stream), length_(head ? 1 : 0), head_(head) {
             if (head) {
                 char c;
-                while (stream_->get(c)) {
+                while (stream_->read(&c, 1)) {
+                    if (stream_->eof()) {
+                        next_head_ = '\0';
+                        break;
+                    }
                     if (alphabet_type::convert(c) == alphabet_type::convert(head_)) {
                         length_++;
                     } else {
                         next_head_ = uint8_t(c);
                         break;
                     }
-                }
-                if (stream_->eof()) {
-                    next_head_ = '\0';
                 }
             } else {
                 next_head_ = '\0';
