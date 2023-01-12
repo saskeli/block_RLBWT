@@ -131,10 +131,10 @@ class naive_run_rlbwt {
     }
 
     uint64_t rank(uint64_t i, uint8_t c) const {
-        c = alphabet_type::convert(c);
         if (i >= size_) [[unlikely]] {
             return char_counts_[c + 1] - char_counts_[c];
         }
+        c = alphabet_type::convert(c);
         auto count = counts_[find(i)];
         i -= count.first;
         uint64_t res = reinterpret_cast<alphabet_type*>(data_ + count.second - alphabet_type::size())->p_sum(c);
