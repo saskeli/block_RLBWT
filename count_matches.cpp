@@ -11,20 +11,21 @@
 
 void help() {
     std::cout << "count matches in RLBWT data structure.\n\n";
-    std::cout << "Usage: count_matches [-s] bwt_file patterns\n";
-    std::cout << "   bwt_file   Path to block rlbwt root element.\n";
+    std::cout << "Usage: count_matches [options] <bwt_file> <patterns>\n";
+    std::cout << "   bwt_file   Path to block rlbwt element.\n";
     std::cout << "   patterns   Path to file containing patterns.\n";
     std::cout << "   -s         Block rlbwt is space optimized.\n";
     std::cout << "   -c         Blocks contains a constant number of runs.\n";
-    std::cout << "Bwt file and at least one pattern are required.\n\n";
-    std::cout << "Example: count_matches bwt.bin Einstein" << std::endl;
+    std::cout << "   -t         Don't include query times in std::cout\n";
+    std::cout << "Bwt and pattern files are required.\n\n";
+    std::cout << "Example: count_matches bwt.bin Einstein.txt >> /dev/null" << std::endl;
     exit(0);
 }
 
 static const size_t n = 10000;
 
 template <class bwt_type>
-double bench(const std::string& in_file_path, std::ifstream& patterns) {
+double bench(const std::string& in_file_path, std::ifstream& patterns, bool o_t) {
     using std::chrono::duration_cast;
     using std::chrono::high_resolution_clock;
     using std::chrono::nanoseconds;
@@ -38,7 +39,11 @@ double bench(const std::string& in_file_path, std::ifstream& patterns) {
         uint64_t count = bwt.count(p);
         auto end = high_resolution_clock::now();
         double time = duration_cast<nanoseconds>(end - start).count();
-        std::cout << p << "\t" << count << "\t" << time << std::endl;
+        if (o_t) {
+            std::cout << p << "\t" << count << "\t" << time << std::endl;
+        } else {
+            std::cout << p << "\t" << count << std::endl;
+        }
         total += time;
     }
     return total;
@@ -53,11 +58,14 @@ int main(int argc, char const* argv[]) {
     std::string patterns = "";
     bool space_op = false;
     bool run_block = false;
+    bool output_time = true;
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-s") == 0) {
             space_op = true;
         } else if (strcmp(argv[i], "-c") == 0) {
             run_block = true;
+        } else if (strcmp(argv[i], "-t") == 0) {
+            output_time = false;
         } else if (in_file_path.size() == 0) {
             in_file_path = argv[i];
         } else {
@@ -69,11 +77,11 @@ int main(int argc, char const* argv[]) {
     std::cout << "Pattern\tcount\ttime" << std::endl;
     double t;
     if (run_block) {
-        t = bench<bbwt::run<>>(in_file_path, p);
+        t = bench<bbwt::run<>>(in_file_path, p, output_time);
     } else if (space_op) {
-        t = bench<bbwt::vbyte<>>(in_file_path, p);
+        t = bench<bbwt::vbyte<>>(in_file_path, p, output_time);
     } else {
-        t = bench<bbwt::two_byte<>>(in_file_path, p);
+        t = bench<bbwt::two_byte<>>(in_file_path, p, output_time);
     }
     std::cerr << "Mean query time: " << (t / n) << "ns" << std::endl;
 }
