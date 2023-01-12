@@ -21,11 +21,11 @@ void help() {
         << "If bwt contains insufficient substring matching alphabet and "
         << "pattern length the process will no terminate.\n\n";
     std::cout << "Example: make_test_data covid.tb_bwt 10000 10 > patterns.txt" << std::endl;
-    exit(0);
 }
 
 int main(int argc, char const* argv[]) {
     if (argc < 4) {
+        help();
         exit(1);
     }
     size_t p_len, n;
