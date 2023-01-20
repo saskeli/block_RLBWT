@@ -1,13 +1,12 @@
-CFLAGS = -std=c++2a -Wall -Wextra -Wshadow -pedantic -march=native
+CL = $(shell getconf LEVEL1_DCACHE_LINESIZE)
 
-HEADERS = include/reader.hpp include/block_rlbwt_builder.hpp include/block_rlbwt.hpp \
+CFLAGS = -std=c++2a -Wall -Wextra -Wshadow -pedantic -march=native -DCACHE_LINE=$(CL)
+
+HEADERS = include/reader.hpp include/block_rlbwt.hpp include/b_heap.hpp\
           include/byte_block.hpp include/byte_alphabet.hpp include/super_block.hpp \
 		  include/types.hpp include/two_byte_block.hpp include/custom_alphabet.hpp \
 		  include/one_byte_block.hpp include/d_block.hpp include/acgtn_alphabet.hpp \
-		  include/alphabet.hpp include/vbyte_runs.hpp include/naive_run_rlbwt.hpp \
-		  include/naive_run_rlbwt_builder.hpp
-
-COVERAGE = -g
+		  include/alphabet.hpp include/vbyte_runs.hpp include/run_rlbwt.hpp 
 
 .PHONY: clean update_git debug all
 

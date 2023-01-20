@@ -1,7 +1,6 @@
 #pragma once
 
 #include "block_rlbwt.hpp"
-#include "block_rlbwt_builder.hpp"
 //#include "byte_alphabet.hpp"
 #include "byte_block.hpp"
 #include "custom_alphabet.hpp"
@@ -14,7 +13,7 @@
 //#include "acgtn_alphabet.hpp"
 #include "alphabet.hpp"
 #include "vbyte_runs.hpp"
-#include "naive_run_rlbwt.hpp"
+#include "run_rlbwt.hpp"
 
 namespace bbwt {
 
@@ -94,10 +93,10 @@ using dyn = block_rlbwt<
                 one_byte_block<block_size, alphabet<uint32_t>, true>>>,
     alphabet<uint64_t>>;
 
-template <uint32_t n_runs = 32>
-using run_build = naive_run_rlbwt<vbyte_runs<n_runs, custom_alphabet<uint64_t>>>;
+template <uint32_t n_runs = 8>
+using run_build = run_rlbwt<vbyte_runs<n_runs, custom_alphabet<uint64_t>>>;
 
-template <uint32_t n_runs = 32>
-using run = naive_run_rlbwt<vbyte_runs<n_runs, alphabet<uint64_t>>>;
+template <uint32_t n_runs = 8>
+using run = run_rlbwt<vbyte_runs<n_runs, alphabet<uint64_t>>, 4096>;
 
 }  // namespace bbwt
