@@ -9,6 +9,8 @@
 #include <utility>
 
 #include "b_heap.hpp"
+#include "custom_alphabet.hpp"
+#include "alphabet.hpp"
 
 namespace bbwt {
 template <class bwt_type>
@@ -124,7 +126,7 @@ class run_rlbwt_builder {
     }
 
     void write_root() {
-        std::cerr << "Writing \"root\" to file\n"
+        std::cerr << "Writing \"root\" of " << block_type::cap << "-rb-rlbwt to file\n"
                   << " Made " << block_offsets_.size() << " blocks\n"
                   << " containing a total of " << elems_ << " elements." << std::endl;
 

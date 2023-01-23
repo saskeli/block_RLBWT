@@ -151,18 +151,6 @@ class block_rlbwt_builder {
 
    private:
     void write_super_block() {
-        std::cerr << "Writing super block" << std::endl;
-        std::cerr << "Total of " << elems_ << " elements read" << std::endl;
-        uint64_t tot_bytes =
-            sizeof(uint64_t) +
-            sizeof(uint64_t) * bwt_type::super_block_type::blocks +
-            super_block_bytes_;
-        std::cerr << sizeof(uint64_t) << " + "
-                  << sizeof(uint64_t) * bwt_type::super_block_type::blocks
-                  << " + " << super_block_bytes_ << " = " << tot_bytes
-                  << " bytes = " << double(tot_bytes) / (uint64_t(1) << 30)
-                  << " GiB" << std::endl;
-
         uint64_t file_bytes =
             super_block_bytes_ +
             sizeof(uint64_t) * bwt_type::super_block_type::blocks;
@@ -236,7 +224,7 @@ class block_rlbwt_builder {
     void write_root() {
         uint64_t n_blocks = block_counts_.size() - 1;
 
-        std::cerr << "Writing \"root\" to file\n"
+        std::cerr << "Writing \"root\" of " << block_type::cap << "-sb-rlbwt to file\n"
                   << " Seen " << n_blocks << " super blocks\n"
                   << " containing a total of " << elems_ << " elements\n"
                   << " " << dense_blocks_ << " dense blocks out of "
@@ -257,12 +245,6 @@ class block_rlbwt_builder {
         out.write(reinterpret_cast<char*>(block_counts_.data()), bytes);
         out.write(reinterpret_cast<char*>(char_counts_), sizeof(uint64_t) * 257);
         out.close();
-
-        std::cerr << sizeof(uint64_t) << " + " << sizeof(uint64_t) << " + "
-                  << sizeof(uint64_t) << " + " << bytes << " = "
-                  << bytes + 3 * sizeof(uint64_t) << " bytes = "
-                  << double(bytes + 3 * sizeof(uint64_t)) / (uint64_t(1) << 20)
-                  << " MiB" << std::endl;
     }
 };
 

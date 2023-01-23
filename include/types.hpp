@@ -15,88 +15,58 @@
 #include "vbyte_runs.hpp"
 #include "run_rlbwt.hpp"
 
+#ifndef RUN_COUNT
+#define RUN_COUNT 32
+#endif
+
+#ifndef LARGE_BLOCK_SIZE
+#define LARGE_BLOCK_SIZE 16384
+#endif
+
+#ifndef SMALL_BLOCK_SIZE
+#define SMALL_BLOCK_SIZE 4096
+#endif
+
 namespace bbwt {
 
-/*template <uint32_t block_size = 32768>
-using byte_rlbwt =
-    block_rlbwt<super_block<byte_block<block_size, byte_alphabet<u_int32_t>>>,
-                byte_alphabet<uint64_t>>;
-
-template <uint32_t block_size = 4096>
-using genomics_rlbwt = block_rlbwt<
-    super_block<two_byte_block<block_size, genomics_alphabet<uint32_t>>>,
-    genomics_alphabet<uint64_t>>;
-
-template <uint32_t block_size = 4096>
-using dgen_rlbwt = block_rlbwt<
-    super_block<
-        d_block<two_byte_block<block_size, genomics_alphabet<uint32_t>>,
-                one_byte_block<block_size, genomics_alphabet<uint32_t>, true>>>,
-    genomics_alphabet<uint64_t>>;    
-
-template <uint32_t block_size = 4096>
-using acgt_rlbwt = block_rlbwt<
-    super_block<two_byte_block<block_size, acgt_alphabet<uint32_t>>>,
-    acgt_alphabet<uint64_t>>;
-
-using rlbwt = block_rlbwt<
-    super_block<two_byte_block<4096, delta_alphabet<uint32_t, 10, 89>>>,
-    delta_alphabet<uint64_t, 10, 89>>;
-
-using custom_rlbwt = block_rlbwt<
-    super_block<two_byte_block<4096, custom_alphabet<uint32_t>>>,
-    custom_alphabet<uint64_t>>;
-
-//using custom_rlbwt = block_rlbwt<
-//    super_block<byte_block<131072, genomics_alphabet<uint32_t>>>,
-//    genomics_alphabet<uint64_t>>;
-
-template <uint32_t block_size = 4096>
-using dyn_rlbwt = block_rlbwt<
-    super_block<
-        d_block<two_byte_block<block_size, custom_alphabet<uint32_t>>,
-                one_byte_block<block_size, custom_alphabet<uint32_t>, true>>>,
-    custom_alphabet<uint64_t>>;
-*/
-
-template <uint32_t block_size = 4096>
+template <uint32_t block_size = SMALL_BLOCK_SIZE>
 using two_byte_build = block_rlbwt<
     super_block<two_byte_block<block_size, custom_alphabet<uint32_t>>>,
     custom_alphabet<uint64_t>>;
 
-template <uint32_t block_size = 4096>
+template <uint32_t block_size = SMALL_BLOCK_SIZE>
 using two_byte = block_rlbwt<
     super_block<two_byte_block<block_size, alphabet<uint32_t>>>,
     alphabet<uint64_t>>;
 
-template <uint32_t block_size = 16384>
+template <uint32_t block_size = LARGE_BLOCK_SIZE>
 using vbyte_build = block_rlbwt<
     super_block<byte_block<block_size, custom_alphabet<uint32_t>>>,
     custom_alphabet<uint64_t>>;
 
-template <uint32_t block_size = 16384>
+template <uint32_t block_size = LARGE_BLOCK_SIZE>
 using vbyte = block_rlbwt<
     super_block<byte_block<block_size, alphabet<uint32_t>>>,
     alphabet<uint64_t>>;
 
-template <uint32_t block_size = 16384>
+template <uint32_t block_size = LARGE_BLOCK_SIZE>
 using dyn_build = block_rlbwt<
     super_block<
         d_block<two_byte_block<block_size, custom_alphabet<uint32_t>>,
                 one_byte_block<block_size, custom_alphabet<uint32_t>, true>>>,
     custom_alphabet<uint64_t>>;
 
-template <uint32_t block_size = 16384>
+template <uint32_t block_size = LARGE_BLOCK_SIZE>
 using dyn = block_rlbwt<
     super_block<
         d_block<two_byte_block<block_size, alphabet<uint32_t>>,
                 one_byte_block<block_size, alphabet<uint32_t>, true>>>,
     alphabet<uint64_t>>;
 
-template <uint32_t n_runs = 32>
+template <uint32_t n_runs = RUN_COUNT>
 using run_build = run_rlbwt<vbyte_runs<n_runs, custom_alphabet<uint64_t>>>;
 
-template <uint32_t n_runs = 32>
+template <uint32_t n_runs = RUN_COUNT>
 using run = run_rlbwt<vbyte_runs<n_runs, alphabet<uint64_t>>, 0>;
 
 }  // namespace bbwt

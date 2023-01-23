@@ -84,7 +84,8 @@ void output_exact(std::vector<std::pair<uint64_t, uint8_t>>& counts) {
     }
     uint64_t s_bytes = used_bits / 8 + (used_bits % 8 ? 1 : 0);
 
-    std::cout << "#include <cstdint>\n"
+    std::cout << "#pragma once\n\n"
+              << "#include <cstdint>\n"
               << "#include <utility>\n"
               << "#include <endian.h>\n\n"
               << "namespace bbwt {\n"

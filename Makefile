@@ -1,6 +1,20 @@
+
+ifndef RUN_COUNT
+RUN_COUNT = 32
+endif
+
+ifndef LARGE_BLOCK_SIZE
+LARGE_BLOCK_SIZE = 16384
+endif
+
+ifndef SMALL_BLOCK_SIZE
+SMALL_BLOCK_SIZE = 4096
+endif
+
 CL = $(shell getconf LEVEL1_DCACHE_LINESIZE)
 
-CFLAGS = -std=c++2a -Wall -Wextra -Wshadow -pedantic -march=native -DCACHE_LINE=$(CL)
+CFLAGS = -std=c++2a -Wall -Wextra -Wshadow -pedantic -march=native -DLARGE_BLOCK_SIZE=$(LARGE_BLOCK_SIZE) \
+         -DSMALL_BLOCK_SIZE=$(SMALL_BLOCK_SIZE) -DRUN_COUNT=$(RUN_COUNT) -DCACHE_LINE=$(CL)
 
 HEADERS = include/reader.hpp include/block_rlbwt.hpp include/b_heap.hpp\
           include/byte_block.hpp include/byte_alphabet.hpp include/super_block.hpp \
