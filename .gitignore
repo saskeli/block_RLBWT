@@ -47,3 +47,6 @@ make_test_data
 
 #vscode
 .vscode
+
+#Jupyter notebook stuff
+.ipynb_checkpoints/
