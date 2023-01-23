@@ -31,7 +31,7 @@ double bench(const std::string& in_file_path, std::ifstream& patterns, bool o_t,
     using std::chrono::nanoseconds;
 
     bwt_type bwt(in_file_path);
-    bps = double(bwt.bytes()) / bwt.size();
+    bps = 8 * double(bwt.bytes()) / bwt.size();
     double total = 0;
     std::string p;
     for (size_t i = 0; i < n; i++) {
