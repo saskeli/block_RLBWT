@@ -18,6 +18,7 @@ void help() {
         << "All parameters are required.\n"
         << "bwt file is expected to be two-byte encoded.\n"
         << "Patterns will be composed of ACGT symbols.\n"
+        << "First line of pattern file will be the number of patterns\n"
         << "If bwt contains insufficient substring matching alphabet and "
         << "pattern length the process will no terminate.\n\n";
     std::cout << "Example: make_test_data covid.tb_bwt 10000 10 > patterns.txt" << std::endl;
@@ -38,25 +39,16 @@ int main(int argc, char const* argv[]) {
     std::uniform_int_distribution<unsigned long long> gen(0, bwt.size());
     char* chars = (char*)std::malloc(p_len + 1);
     chars[p_len] = '\0';
+    std::cout << n << std::endl;
     for (size_t i = 0; i < n; i++) {
         uint64_t idx = gen(mt);
-        bool ok = true;
         for (size_t p_idx = p_len - 1; p_idx < p_len; p_idx--) {
-            char c = bwt[idx];
-            if (c == 'A' || c == 'C' || c == 'G' || c == 'T') {
-                chars[p_idx] = bwt[idx];
-                idx = bwt.LF(idx);
-            } else {
-                ok = false;
-                break;
-            }
+            chars[p_idx] = bwt[idx];
+            idx = bwt.LF(idx);
+            
         }
-        if (ok) {
-            std::cout << chars << std::endl;
-            std::cerr << "\r" << i + 1 << " patterns created";
-        } else {
-            i--;
-        }
+        std::cout << chars << std::endl;
+        std::cerr << "\r" << i + 1 << " patterns created";
     }
     std::cerr << std::endl;
     return 0;    

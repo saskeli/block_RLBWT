@@ -22,10 +22,8 @@ void help() {
     exit(0);
 }
 
-static const size_t n = 10000;
-
 template <class bwt_type>
-double bench(const std::string& in_file_path, std::ifstream& patterns, bool o_t, double& bps) {
+double bench(const std::string& in_file_path, std::ifstream& patterns, bool o_t, double& bps, uint64_t n) {
     using std::chrono::duration_cast;
     using std::chrono::high_resolution_clock;
     using std::chrono::nanoseconds;
@@ -74,16 +72,18 @@ int main(int argc, char const* argv[]) {
         }
     }
     std::ifstream p(patterns);
-    std::cerr << "looking for patterns from " << patterns << " in " << in_file_path << std::endl;
+    uint64_t n;
+    p >> n;
+    std::cerr << "looking for " << n << " patterns from " << patterns << " in " << in_file_path << std::endl;
     std::cout << "Pattern\tcount\ttime" << std::endl;
     double t;
     double bps = 0;
     if (run_block) {
-        t = bench<bbwt::run<>>(in_file_path, p, output_time, bps);
+        t = bench<bbwt::run<>>(in_file_path, p, output_time, bps, n);
     } else if (space_op) {
-        t = bench<bbwt::vbyte<>>(in_file_path, p, output_time, bps);
+        t = bench<bbwt::vbyte<>>(in_file_path, p, output_time, bps, n);
     } else {
-        t = bench<bbwt::two_byte<>>(in_file_path, p, output_time, bps);
+        t = bench<bbwt::two_byte<>>(in_file_path, p, output_time, bps, n);
     }
     std::cerr << "Mean query time: " << (t / n) << "ns\n" 
               << " with " << bps << " bits per symbol" << std::endl;
