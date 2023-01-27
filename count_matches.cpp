@@ -17,6 +17,7 @@ void help() {
     std::cout << "   -s         Block rlbwt is space optimized.\n";
     std::cout << "   -c         Blocks contains a constant number of runs.\n";
     std::cout << "   -t         Don't include query times in std::cout\n";
+    std::cout << "   -n count   Number of patterns in file. Defaults to 1000\n";
     std::cout << "Bwt and pattern files are required.\n\n";
     std::cout << "Example: count_matches bwt.bin Einstein.txt >> /dev/null" << std::endl;
     exit(0);
@@ -55,6 +56,7 @@ int main(int argc, char const* argv[]) {
     }
     std::string in_file_path = "";
     std::string patterns = "";
+    uint64_t n = 1000;
     bool space_op = false;
     bool run_block = false;
     bool output_time = true;
@@ -63,6 +65,8 @@ int main(int argc, char const* argv[]) {
             space_op = true;
         } else if (strcmp(argv[i], "-c") == 0) {
             run_block = true;
+        } else if (strcmp(argv[i], "-n") == 0) {
+            std::sscanf(argv[++i], "%lu", &n);
         } else if (strcmp(argv[i], "-t") == 0) {
             output_time = false;
         } else if (in_file_path.size() == 0) {
@@ -72,8 +76,6 @@ int main(int argc, char const* argv[]) {
         }
     }
     std::ifstream p(patterns);
-    uint64_t n;
-    p >> n;
     std::cerr << "looking for " << n << " patterns from " << patterns << " in " << in_file_path << std::endl;
     std::cout << "Pattern\tcount\ttime" << std::endl;
     double t;
