@@ -24,7 +24,7 @@
 #endif
 
 #ifndef SMALL_BLOCK_SIZE
-#define SMALL_BLOCK_SIZE 4096
+#define SMALL_BLOCK_SIZE 2048
 #endif
 
 namespace bbwt {
@@ -49,18 +49,32 @@ using vbyte = block_rlbwt<
     super_block<byte_block<block_size, alphabet<uint32_t>>>,
     alphabet<uint64_t>>;
 
-template <uint32_t block_size = LARGE_BLOCK_SIZE>
+template <uint32_t block_size = SMALL_BLOCK_SIZE>
 using dyn_build = block_rlbwt<
     super_block<
         d_block<two_byte_block<block_size, custom_alphabet<uint32_t>>,
-                one_byte_block<block_size, custom_alphabet<uint32_t>, true>>>,
+                two_byte_block<block_size, custom_alphabet<uint32_t>>>>,
     custom_alphabet<uint64_t>>;
 
-template <uint32_t block_size = LARGE_BLOCK_SIZE>
+template <uint32_t block_size = SMALL_BLOCK_SIZE>
 using dyn = block_rlbwt<
     super_block<
         d_block<two_byte_block<block_size, alphabet<uint32_t>>,
-                one_byte_block<block_size, alphabet<uint32_t>, true>>>,
+                two_byte_block<block_size, alphabet<uint32_t>>>>,
+    alphabet<uint64_t>>;
+
+template <uint32_t block_size = SMALL_BLOCK_SIZE>
+using t_dyn_build = block_rlbwt<
+    super_block<
+        d_block<byte_block<block_size, custom_alphabet<uint32_t>>,
+                two_byte_block<block_size, custom_alphabet<uint32_t>>>>,
+    custom_alphabet<uint64_t>>;
+
+template <uint32_t block_size = SMALL_BLOCK_SIZE>
+using t_dyn = block_rlbwt<
+    super_block<
+        d_block<byte_block<block_size, alphabet<uint32_t>>,
+                two_byte_block<block_size, alphabet<uint32_t>>>>,
     alphabet<uint64_t>>;
 
 template <uint32_t n_runs = RUN_COUNT>
