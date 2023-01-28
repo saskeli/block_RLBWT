@@ -369,6 +369,9 @@ class block_rlbwt {
             a = rank(a, c);
             b = rank(b, c);
             ret = b - a;
+            if (ret == 0) [[unlikely]] {
+                break;
+            }
             a += char_counts_[c];
             b += char_counts_[c];
         }
