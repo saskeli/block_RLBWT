@@ -84,6 +84,6 @@ int main(int argc, char const* argv[]) {
     } else {
         res = bench<bbwt::two_byte<>>(in_file_path, p, output_time, bps);
     }
-    std::cerr << "Mean query time: " << (res.first / res.second) << "ns\n" 
+    std::cerr << "Mean query time: " << res.first << " / " << res.second << " = " << (res.first / res.second) << "ns\n" 
               << " with " << bps << " bits per symbol" << std::endl;
 }
