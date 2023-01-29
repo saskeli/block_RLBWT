@@ -33,7 +33,7 @@ std::pair<double, size_t> bench(const std::string& in_file_path, std::ifstream& 
     double total = 0;
     std::string p;
     size_t i = 0;
-    while (while(std::getline(patterns, p))) {
+    while (std::getline(patterns, p)) {
         auto start = high_resolution_clock::now();
         uint64_t count = bwt.count(p);
         auto end = high_resolution_clock::now();
