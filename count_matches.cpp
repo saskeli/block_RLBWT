@@ -46,7 +46,7 @@ std::pair<double, size_t> bench(const std::string& in_file_path, std::ifstream& 
         total += time;
         i++;
     }
-    return total, i;
+    return {total, i};
 }
 
 int main(int argc, char const* argv[]) {
