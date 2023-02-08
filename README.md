@@ -1,6 +1,6 @@
 # FM-index implementation that uses blocks with a constant number of runs or symbols
 
-If you find this repository useful, please cite the following:
+If you find this repository useful, please cite
 
 ```bib
 @inproceedings{ddps2023sea,
