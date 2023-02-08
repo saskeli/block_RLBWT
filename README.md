@@ -52,3 +52,7 @@ main() {
 ```
 
 Other hopefully useful defualt index variants are `bbwt::runs<>´ and ´bbwt::vbyte<>´. Different blocks sizes can be entered as template parameters.
+
+## Requirements
+
+Compilation and execution has been tested on multiple modern x86-64 systems and GCC supporting `-std=c++2a`. Code should be compatible with other compilers, but is not expected to compile correctly on compilers not supporting C++ 20. The project should also work on new ARM based apple systems.
