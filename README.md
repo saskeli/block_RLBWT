@@ -13,6 +13,17 @@ If you find this repository useful, please cite
 }
 ```
 
+## TL/DR of what this is
+
+BWT indexing by splitting into blocks of $b$ symbols or $b'$ runs. Block-based structure enables fast `rank` queries while not sacrificing too much space.
+
+Supports access, rank and pattern counting.
+
+Mochrobenchmarks for predecessor search support structure related to blocks of $b'$ runs are available at:
+* https://github.com/saskeli/binary_search_patterns and
+* https://github.com/saskeli/search_microbench
+
+
 ## Building indexes
 
 Given a plain text BWT file `/path/to/bwt.txt`, to make the index `bwt.rlbwt` with associated data `bwt_data.rlbwt` run the following in the repository root
