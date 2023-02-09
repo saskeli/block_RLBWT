@@ -5,7 +5,7 @@ If you find this repository useful, please cite
 ```bib
 @inproceedings{ddps2023sea,
   title     = {Simple Runs-bounded FM-index Designs are Fast},
-  author    = {Diaz, Diego and Dönges, Saska and Puglisi, Simon and Salmela, Leena},
+  author    = {Díaz-Domínguez, Diego and Dönges, Saska and Puglisi, Simon and Salmela, Leena},
   booktitle = {TBD},
   year      = {2023},
   pages     = {},
@@ -56,3 +56,12 @@ Other hopefully useful defualt index variants are `bbwt::runs<>´ and ´bbwt::vb
 ## Requirements
 
 Compilation and execution has been tested on multiple modern x86-64 systems and GCC supporting `-std=c++2a`. Code should be compatible with other compilers, but is not expected to compile correctly on compilers not supporting C++ 20. The project should also work on new ARM based apple systems.
+
+## Todo
+
+* Include functionality of `make_alphabe_header` in `make_bwt` to eliminate additional compilations steps in index construction
+* See what effect eliminating super blocks would have. Probably almost nothing but less code is better.
+* Make namespaces clearer to make the project more usefull as a library header for end users.
+* See about entropy encoding run heads. Should be able to implement without significant performance hit, and could save significant space.
+* Extract rare symbols?
+* Separate block encodings for blocks with different properties?
