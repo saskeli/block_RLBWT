@@ -13,6 +13,8 @@ If you find this repository useful, please cite
 }
 ```
 
+[Simple Runs-bounded FM-index Designs are Fast](http://saskeli.kapsi.fi/Simple_RLFM.pdf)
+
 ## TL/DR of what this is
 
 BWT indexing by splitting into blocks of $b$ symbols or $b'$ runs. Block-based structure enables fast `rank` queries while not sacrificing too much space.
