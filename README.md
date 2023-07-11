@@ -6,7 +6,7 @@ If you find this repository useful, please cite
 @inproceedings{ddps2023sea,
   title     = {Simple Runs-bounded FM-index Designs are Fast},
   author    = {Díaz-Domínguez, Diego and Dönges, Saska and Puglisi, Simon and Salmela, Leena},
-  booktitle = {TBD},
+  booktitle = {Proc. 21st Symposium on Experimental Algorithms},
   year      = {2023},
   pages     = {},
   ee        = {doi.org}
