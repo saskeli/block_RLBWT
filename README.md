@@ -3,17 +3,27 @@
 If you find this repository useful, please cite
 
 ```bib
-@inproceedings{ddps2023sea,
-  title     = {Simple Runs-bounded FM-index Designs are Fast},
-  author    = {Díaz-Domínguez, Diego and Dönges, Saska and Puglisi, Simon and Salmela, Leena},
-  booktitle = {Proc. 21st Symposium on Experimental Algorithms},
-  year      = {2023},
-  pages     = {},
-  ee        = {doi.org}
+@InProceedings{ddps2023sea,
+  author =	{D{\'\i}az-Dom{\'\i}nguez, Diego and D\"{o}nges, Saska and Puglisi, Simon J. and Salmela, Leena},
+  title =	{{Simple Runs-Bounded FM-Index Designs Are Fast}},
+  booktitle =	{21st International Symposium on Experimental Algorithms (SEA 2023)},
+  pages =	{7:1--7:16},
+  series =	{Leibniz International Proceedings in Informatics (LIPIcs)},
+  ISBN =	{978-3-95977-279-2},
+  ISSN =	{1868-8969},
+  year =	{2023},
+  volume =	{265},
+  editor =	{Georgiadis, Loukas},
+  publisher =	{Schloss Dagstuhl -- Leibniz-Zentrum f{\"u}r Informatik},
+  address =	{Dagstuhl, Germany},
+  URL =		{https://drops.dagstuhl.de/opus/volltexte/2023/18357},
+  URN =		{urn:nbn:de:0030-drops-183579},
+  doi =		{10.4230/LIPIcs.SEA.2023.7},
+  annote =	{Keywords: data structures, efficient algorithms}
 }
 ```
 
-[Simple Runs-bounded FM-index Designs are Fast](http://saskeli.kapsi.fi/Simple_RLFM.pdf)
+[Simple Runs-bounded FM-index Designs are Fast](https://doi.org/10.4230/LIPIcs.SEA.2023.7)
 
 ## TL/DR of what this is
 
