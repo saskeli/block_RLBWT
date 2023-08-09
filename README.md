@@ -23,7 +23,7 @@ If you find this repository useful, please cite
 }
 ```
 
-[Simple Runs-bounded FM-index Designs are Fast](https://doi.org/10.4230/LIPIcs.SEA.2023.7)
+Doi link and full text: [Simple Runs-bounded FM-index Designs are Fast](https://doi.org/10.4230/LIPIcs.SEA.2023.7)
 
 ## TL/DR of what this is
 
