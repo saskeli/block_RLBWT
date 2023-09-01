@@ -107,6 +107,29 @@ class two_byte_block {
         }
     }
 
+    template <class vec>
+    uint32_t i_rank(uint8_t& c, uint32_t location, vec& counts) {
+        const uint16_t* data = reinterpret_cast<const uint16_t*>(this);
+        const uint16_t SHIFT = 16 - alphabet_type::width;
+        const uint16_t LIMIT = uint16_t(1) << SHIFT;
+        const uint16_t MASK = LIMIT - 1;
+        uint32_t i = 0;
+        while (true) {
+            uint8_t current = data[i] >> SHIFT;
+            uint16_t length = 1 + (data[i++] & MASK);
+            //std::cerr << " run " << int(current) << ", " << length << std::endl;
+            if (location >= length) [[likely]] {
+                location -= length;
+                counts[current] += length;
+            } else {
+                counts[current] += location;
+                c = current;
+                //std::cerr << "  done, with " << res << " seen." << std::endl;
+                return counts[current];
+            }
+        }
+    }
+
     uint64_t commit(uint8_t** scratch) {
         uint64_t bytes = reinterpret_cast<uint64_t*>(scratch[0])[0];
         bytes *= 2;

@@ -151,6 +151,7 @@ class run_rlbwt {
     typedef run_rlbwt_builder<run_rlbwt> builder;
 
    private:
+    static std::vector<uint64_t> scratch;
     uint64_t size_;
     uint64_t block_count_;
     uint64_t bytes_;
@@ -169,6 +170,9 @@ class run_rlbwt {
         }
         bytes_ += alphabet_type::load_statics(in_file);
         bytes_ += block_type::load_statics(in_file);
+        if (scratch.size() < alphabet_type::size()) {
+            scratch.resize(alphabet_type::size());
+        }
         uint64_t data_bytes;
         in_file.read(reinterpret_cast<char*>(&data_bytes), sizeof(uint64_t));
         in_file.read(reinterpret_cast<char*>(&size_), sizeof(uint64_t));
@@ -276,6 +280,24 @@ class run_rlbwt {
         uint64_t res = reinterpret_cast<alphabet_type*>(data_ + count.second - alphabet_type::size())->p_sum(c);
         res += reinterpret_cast<block_type*>(data_ + count.second)->rank(c, i);
         return res;
+    }
+
+    uint64_t i_rank(uint64_t i, uint8_t& c) const {
+        std::fill(scratch.begin(), scratch.end(), 0);
+        auto count = f_index ? b_h_.find(i, skips[i / f_index]) : b_h_.find(i);
+        i -= count.first;
+        uint64_t res = reinterpret_cast<const block_type*>(data_ + count.second)->i_rank(c, i, scratch);
+        res += reinterpret_cast<const alphabet_type*>(data_ + count.second - alphabet_type::size())->p_sum(c);
+        return res;
+    }
+
+    uint64_t select(uint64_t i, uint8_t c) const {
+        uint64_t a_l = 0;
+        auto a = f_index ? b_h_.find(a_l, skips[a_l]) : b_h_.find(a_l);
+        uint64_t b_l = size_ - 1;
+        auto b = f_index ? b_h_.find(b_l, skips[b_l / f_index]) : b_h_.find(b_l);
+        uint64_t m_l = (b_l + 1) / 2;
+        auto m = f_index ? b_h_.find(m_l, skips[m_l / f_index]) : b_h_.find(m_l);
     }
 
     uint8_t operator[](size_t i) const {

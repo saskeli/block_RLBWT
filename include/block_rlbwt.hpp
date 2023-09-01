@@ -258,6 +258,7 @@ class block_rlbwt {
 
    private:
     static const constexpr uint64_t SUPER_BLOCK_ELEMS = uint64_t(1) << 32;
+    static std::vector<uint64_t> scratch;
     uint64_t size_;
     uint64_t block_count_;
     uint64_t bytes_;
@@ -284,6 +285,9 @@ class block_rlbwt {
         bytes_ += block_alphabet_type::load_statics(in_file);
         bytes_ += super_block_type::load_statics(in_file);
         bytes_ += block_type::load_statics(in_file);
+        if (scratch.size() < alphabet_type::size()) {
+            scratch.resize(alphabet_type::size());
+        }
         uint64_t data_bytes;
         in_file.read(reinterpret_cast<char*>(&data_bytes), sizeof(uint64_t));
         in_file.read(reinterpret_cast<char*>(&size_), sizeof(uint64_t));
@@ -392,6 +396,15 @@ class block_rlbwt {
         uint64_t s_block_i = i / SUPER_BLOCK_ELEMS;
         uint64_t res = reinterpret_cast<alphabet_type*>(p_sums_ + alphabet_type::size() * s_block_i)->p_sum(c);
         res += s_blocks_[s_block_i]->rank(c, i % SUPER_BLOCK_ELEMS);
+        return res;
+    }
+
+    uint64_t i_rank(u_int64_t i, uint8_t& c) const {
+        uint64_t s_block_i = i / SUPER_BLOCK_ELEMS;
+        std::fill(scratch.begin(), scratch.end(), 0);
+        uint64_t res = s_blocks_[s_block_i]->i_rank(c, i % SUPER_BLOCK_ELEMS, scratch);
+        res += reinterpret_cast<alphabet_type*>(p_sums_ + alphabet_type::size() * s_block_i)->p_sum(c);
+        c = alphabet_type::revert(c);
         return res;
     }
 

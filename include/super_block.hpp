@@ -1,10 +1,11 @@
 #pragma once
 
 #include <cstring>
+#include <cstdint>
 #include <iostream>
 #include <string>
 #include <bitset>
-#include <cstdint>
+#include <vector>
 
 namespace bbwt {
 template <class block_type_>
@@ -46,6 +47,18 @@ class super_block {
         const block_type* block =
             reinterpret_cast<const block_type*>(data() + offsets_[block_i]);
         res += block->rank(c, i % cap);
+        return res;
+    }
+
+    template <class vec>
+    uint32_t i_rank(uint8_t& c, uint32_t i, vec& counts) const {
+        uint32_t block_i = i / cap;
+        __builtin_prefetch(data() + offsets_[block_i]);
+        const alphabet_type* alpha = reinterpret_cast<const alphabet_type*>(
+            data() + offsets_[block_i] - alphabet_type::size());
+        const block_type* block = reinterpret_cast<const block_type*>(data() + offsets_[block_i]);
+        uint32_t res = block->i_rank(c, i % cap, counts);
+        res += alpha->p_sum(c);
         return res;
     }
 
@@ -91,3 +104,4 @@ class super_block {
     }
 };
 }  // namespace bbwt
+ 

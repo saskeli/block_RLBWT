@@ -154,6 +154,32 @@ class byte_block {
         }
     }
 
+    template <class vec>
+    uint32_t i_rank(uint8_t& c, uint32_t location, vec& counts) const {
+        #ifdef VERB
+        std::cerr << "rank(" << c << ", " << location << ")" << std::endl;
+        #endif
+        uint32_t i = 0;
+        
+        while (true) {
+            uint8_t current;
+            uint32_t rl;
+            read(i, current, rl);
+            rl++;
+            #ifdef VERB
+            std::cerr << " run " << alphabet_type::revert(current) << ", " << rl << std::endl;
+            #endif
+            if (location >= rl) [[likely]] {
+                location -= rl;
+                counts[current] += rl;
+            } else {
+                counts[current] += location;
+                c = current;
+                return counts[current];
+            }
+        }
+    }
+
     uint64_t commit(uint8_t** scratch) {
         uint64_t* bytes = reinterpret_cast<uint64_t*>(scratch[0]);
         uint8_t* data = reinterpret_cast<uint8_t*>(this);

@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <cstring>
+#include <vector>
 
 namespace bbwt {
 template <uint32_t block_size, class alphabet_type_>
@@ -96,6 +97,45 @@ class vbyte_runs {
                 res += current == c ? location : 0;
                 return res;
             }
+        }
+    }
+
+    template <class vec>
+    uint64_t i_rank(uint8_t& c, uint32_t location, vec& counts) const {
+        uint32_t i = 0;
+        
+        while (true) {
+            uint8_t current;
+            uint32_t rl;
+            read(i, current, rl);
+            rl++;
+            if (location >= rl) [[likely]] {
+                location -= rl;
+                counts[current] += rl;
+            } else {
+                counts[current] += location;
+                c = current;
+                return counts[current];
+            }
+        }
+    }
+
+    uint64_t select(uint64_t q, uint8_t c) {
+        uint64_t ret = 0;
+
+        while (true) {
+            uint8_t current;
+            uint32_t rl;
+            read(i, current, rl);
+            rl++;
+            if (current == c) {
+                if (rl >= q) {
+                    return ret + q;
+                } else {
+                    q -= rl;
+                }
+            }
+            ret += rl;
         }
     }
 

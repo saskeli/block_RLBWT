@@ -89,6 +89,15 @@ class d_block {
         }
     }
 
+    template <class vec>
+    uint32_t i_rank(uint8_t& c, uint32_t location, vec& counts) {
+        if (b_type) {
+            return reinterpret_cast<const block_b*>(&b_type + 1)->rank(c, location, counts);
+        } else {
+            return reinterpret_cast<const block_a*>(&b_type + 1)->rank(c, location, counts);
+        }
+    }
+
     uint64_t commit(uint8_t** scratch) {
         uint64_t bytes = 1;
         if (b_type) {
