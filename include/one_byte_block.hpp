@@ -1,6 +1,7 @@
 #pragma once
 
 #include <immintrin.h>
+#include <cstdint>
 
 namespace bbwt {
 template <uint32_t block_size, class alphabet_type_, bool avx = false>

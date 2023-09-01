@@ -2,6 +2,7 @@
 
 #include <bit>
 #include <cstdint>
+#include <cstdint>
 
 namespace bbwt {
 template <class dtype>

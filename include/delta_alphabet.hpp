@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <cstring>
+#include <cstdint>
 
 namespace bbwt {
 template <class dtype, uint8_t smallest, uint8_t largest>

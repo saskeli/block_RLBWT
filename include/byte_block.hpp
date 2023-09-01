@@ -3,6 +3,7 @@
 #include <cstring>
 #include <iostream>
 #include <utility>
+#include <cstdint>
 
 //#define VERB
 

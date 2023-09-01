@@ -8,6 +8,7 @@
 #include <fstream>
 #include <utility>
 #include <vector>
+#include <cstdint>
 
 namespace bbwt {
 template <class bwt_type>

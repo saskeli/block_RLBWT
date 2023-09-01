@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 #include "block_rlbwt.hpp"
 //#include "byte_alphabet.hpp"
 #include "byte_block.hpp"

@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 #include <bitset>
+#include <cstdint>
 
 namespace bbwt {
 template <class block_type_>

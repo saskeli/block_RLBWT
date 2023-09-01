@@ -1,5 +1,6 @@
 #pragma once
 #include <iostream>
+#include <cstdint>
 
 namespace bbwt {
     static uint64_t b_blocks = 0;

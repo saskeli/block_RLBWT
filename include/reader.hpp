@@ -2,6 +2,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <cstdint>
 
 namespace bbwt {
 template<class alphabet_type>
