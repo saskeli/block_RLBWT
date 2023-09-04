@@ -180,6 +180,25 @@ class byte_block {
         }
     }
 
+    uint32_t select(uint32_t x, uint8_t c) const {
+        uint32_t i = 0;
+        uint32_t res = 0;
+        while (true) {
+            uint8_t current;
+            uint32_t rl;
+            read(i, current, rl);
+            ++rl;
+            if (c == current) {
+                if (rl >= x) {
+                    return res + x;
+                } else {
+                    x -= rl;
+                }
+            }
+            res += rl;
+        }
+    }
+
     uint64_t commit(uint8_t** scratch) {
         uint64_t* bytes = reinterpret_cast<uint64_t*>(scratch[0]);
         uint8_t* data = reinterpret_cast<uint8_t*>(this);

@@ -150,8 +150,16 @@ class run_rlbwt {
     typedef block_type::alphabet_type alphabet_type;
     typedef run_rlbwt_builder<run_rlbwt> builder;
 
+    struct Char_stats {
+        uint64_t count;
+        uint64_t first_head;
+        uint8_t c;
+    };
+
    private:
     static std::vector<uint64_t> scratch;
+    static std::vector<uint64_t> scratch_b;
+
     uint64_t size_;
     uint64_t block_count_;
     uint64_t bytes_;
@@ -170,8 +178,9 @@ class run_rlbwt {
         }
         bytes_ += alphabet_type::load_statics(in_file);
         bytes_ += block_type::load_statics(in_file);
-        if (scratch.size() < alphabet_type::size()) {
-            scratch.resize(alphabet_type::size());
+        if (scratch.size() < alphabet_type::elems()) {
+            scratch.resize(alphabet_type::elems());
+            scratch_b.resize(alphabet_type::elems());
         }
         uint64_t data_bytes;
         in_file.read(reinterpret_cast<char*>(&data_bytes), sizeof(uint64_t));
@@ -289,6 +298,20 @@ class run_rlbwt {
         uint64_t res = reinterpret_cast<const block_type*>(data_ + count.second)->i_rank(c, i, scratch);
         res += reinterpret_cast<const alphabet_type*>(data_ + count.second - alphabet_type::size())->p_sum(c);
         return res;
+    }
+
+    std::vector<Char_stats> intervall_statistics(uint64_t start, uint64_t end) const {
+        std::fill(scratch.begin(), scratch.end(), 0);
+        std::fill(scratch_b.begin(), scratch_b.end(), 0);
+        auto s_count = f_index ? b_h_.find(start, skips[start / f_index]) : b_h_.find(start);
+        auto e_count = f_index ? b_h_.find(end, skips[end / f_index]) : b_h_.find(end);
+        if (s_count.second == e_count.second) {
+            const block_type* block = reinterpret_cast<const block_type*>(data_ + s_count.second);
+            block->intervall_statistics(start - s_count.first, end - s_count.first, scratch, scratch_b);
+        } else {
+            const block_type* block = reinterpret_cast<const block_type*>(data_ + e_count.second);
+            const alphabet_type* alpha = reinterpret_cast<const alphabet_type*>(data_ + e_count.second - alphabet_type::size());
+        }
     }
 
     uint64_t select(uint64_t i, uint8_t c) const {

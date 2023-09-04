@@ -16,12 +16,14 @@ class alphabet {
     inline static L* L_map;
     inline static S* S_map;
     inline static uint32_t size_ = 0;
+    inline static uint8_t elems_ = 0;
 
    public:
     inline static uint8_t width;
     static uint8_t convert(uint8_t c) { return c_map[c]; }
     static uint8_t revert(uint8_t c) { return r_map[c]; }
     static uint16_t size() { return size_; }
+    static uint16_t elems() { return elems_; }
     template <class i_t>
     static uint32_t load_statics(i_t& in_file) {
         in_file.read(reinterpret_cast<char*>(&width), 1);
@@ -32,9 +34,11 @@ class alphabet {
         in_file.read(reinterpret_cast<char*>(&s), 4);
         if constexpr (sizeof(dtype) == 4) {
             S_map = (S*)std::malloc(s);
+            elems_ = s / sizeof(S);
             in_file.read(reinterpret_cast<char*>(S_map), s);
         } else {
             L_map = (L*)std::malloc(s);
+            elems_ = s / sizeof(S);
             in_file.read(reinterpret_cast<char*>(L_map), s);
         }
         return s + 2 * 256 + sizeof(L*) + sizeof(S*) + 1;

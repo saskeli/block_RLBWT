@@ -98,6 +98,14 @@ class d_block {
         }
     }
 
+    uint32_t select(uint32_t x, uint8_t c) const {
+        if (b_type) {
+            return reinterpret_cast<const block_b*>(&b_type + 1)->select(x, c);
+        } else {
+            return reinterpret_cast<const block_a*>(&b_type + 1)->select(x, c);
+        }
+    }
+
     uint64_t commit(uint8_t** scratch) {
         uint64_t bytes = 1;
         if (b_type) {

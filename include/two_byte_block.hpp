@@ -130,6 +130,26 @@ class two_byte_block {
         }
     }
 
+    uint32_t select(uint32_t x, uint8_t c) const {
+        const uint16_t* data = reinterpret_cast<const uint16_t*>(this);
+        const uint16_t SHIFT = 16 - alphabet_type::width;
+        const uint16_t LIMIT = uint16_t(1) << SHIFT;
+        const uint16_t MASK = LIMIT - 1;
+        uint32_t i = 0;
+        uint32_t res = 0;
+        while (true) {
+            uint8_t current = data[i] >> SHIFT;
+            uint16_t length = 1 + (data[i++] & MASK);
+            if (current == c) {
+                if (length >= x) {
+                    return res + x;
+                }
+                x -= length;
+            }
+            res += length;
+        }
+    }
+
     uint64_t commit(uint8_t** scratch) {
         uint64_t bytes = reinterpret_cast<uint64_t*>(scratch[0])[0];
         bytes *= 2;

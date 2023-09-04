@@ -62,6 +62,24 @@ class super_block {
         return res;
     }
 
+    uint32_t select(uint64_t x, uint8_t c, uint64_t size) const {
+        uint32_t a = 0;
+        uint32_t b = size / cap;
+        while (a < b) {
+            uint32_t m = (a + b + 1) / 2;
+            uint32_t ps = reinterpret_cast<const alphabet_type*>(data() + offsets_[m] - alphabet_type::size())->p_sum(c);
+            if (ps > x) {
+                b = m - 1;
+            } else {
+                a = m;
+            }
+        }
+        uint32_t res = a * cap;
+        x -= reinterpret_cast<const alphabet_type*>(data() + offsets_[a] - alphabet_type::size())->p_sum(c);
+        res += reinterpret_cast<const block_type*>(data() + offsets_[a])->select(x, c);
+        return res;
+    }
+
     template <class dtype>
     void print_block(uint32_t idx, uint32_t n_bytes) const {
         dtype* dp = reinterpret_cast<dtype*>(data() + offsets_[idx]);

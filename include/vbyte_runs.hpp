@@ -122,7 +122,7 @@ class vbyte_runs {
 
     uint64_t select(uint64_t q, uint8_t c) {
         uint64_t ret = 0;
-
+        uint32_t i = 0;
         while (true) {
             uint8_t current;
             uint32_t rl;
