@@ -65,6 +65,7 @@ int main() {
     for (uint64_t end = 0; end < runs * run_lengths; end += 10000) {
         uint64_t start = end / 2;
         std::cout << "interval_symbols(" << start << ", " << end << "):" << std::endl;
+        // Can also be used like the sdsl function where vector references are fed in for the results.
         for (auto s : bwt.interval_symbols(start, end)) {
             std::cout << "  " << s.c << ", " << s.start_rank << ", " << s.end_rank << std::endl;
         }
