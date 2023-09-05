@@ -92,9 +92,27 @@ class d_block {
     template <class vec>
     uint32_t i_rank(uint8_t& c, uint32_t location, vec& counts) {
         if (b_type) {
-            return reinterpret_cast<const block_b*>(&b_type + 1)->rank(c, location, counts);
+            return reinterpret_cast<const block_b*>(&b_type + 1)->i_rank(c, location, counts);
         } else {
-            return reinterpret_cast<const block_a*>(&b_type + 1)->rank(c, location, counts);
+            return reinterpret_cast<const block_a*>(&b_type + 1)->i_rank(c, location, counts);
+        }
+    }
+
+    template <class vec>
+    void c_rank(uint32_t loc, vec& counts) const {
+        if (b_type) {
+            return reinterpret_cast<const block_b*>(&b_type + 1)->c_rank(loc, counts);
+        } else {
+            return reinterpret_cast<const block_a*>(&b_type + 1)->c_rank(loc, counts);
+        }
+    }
+
+    template <class vec>
+    void interval_statistics(uint32_t start, uint32_t end, vec& s_counts, vec& e_counts) {
+        if (b_type) {
+            return reinterpret_cast<const block_b*>(&b_type + 1)->interval_statistics(start, end, s_counts, e_counts);
+        } else {
+            return reinterpret_cast<const block_a*>(&b_type + 1)->interval_statistics(start, end, s_counts, e_counts);
         }
     }
 

@@ -169,13 +169,69 @@ class byte_block {
             #ifdef VERB
             std::cerr << " run " << alphabet_type::revert(current) << ", " << rl << std::endl;
             #endif
-            if (location >= rl) [[likely]] {
+            if (location > rl) [[likely]] {
                 location -= rl;
                 counts[current] += rl;
             } else {
                 counts[current] += location;
                 c = current;
                 return counts[current];
+            }
+        }
+    }
+
+    template <class vec>
+    void c_rank(uint32_t loc, vec& counts) const {
+        uint32_t i = 0;
+        while (true) {
+            uint8_t current;
+            uint32_t rl;
+            read(i, current, rl);
+            rl++;
+            if (loc > rl) [[likely]] {
+                loc -= rl;
+                counts[current] += rl;
+            } else {
+                counts[current] += loc;
+                return;
+            }
+        }
+    }
+
+    template <class vec>
+    void interval_statistics(uint32_t start, uint32_t end, vec& s_counts, vec& e_counts) {
+        uint32_t i = 0;
+        end -= start;
+        while (true) {
+            uint8_t current;
+            uint32_t rl;
+            read(i, current, rl);
+            rl++;
+            if (start > rl) [[likely]] {
+                start -= rl;
+                s_counts[current] += rl;
+                e_counts[current] += rl;
+            } else {
+                s_counts[current] += start;
+                if (start + end <= rl) {
+                    e_counts[current] += start + end;
+                    return;
+                }
+                e_counts[current] += rl;
+                break;
+            }
+        }
+        while (true) {
+            uint8_t current;
+            uint32_t rl;
+            read(i, current, rl);
+            rl++;
+            if (end > rl) [[likely]] {
+                end -= rl;
+                e_counts[current] += rl;
+            } else {
+                e_counts[current] += end;
+                return;
             }
         }
     }

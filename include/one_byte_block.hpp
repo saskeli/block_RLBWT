@@ -124,7 +124,66 @@ class one_byte_block {
         }
     }
 
+    template <class vec>
+    void c_rank(uint32_t loc, vec& counts) const {
+        const uint16_t SHIFT = 8 - alphabet_type::width;
+        const uint16_t LIMIT = uint16_t(1) << SHIFT;
+        const uint16_t MASK = LIMIT - 1;
+        const uint8_t* data = reinterpret_cast<const uint8_t*>(this);
+        uint32_t i = 0;
+        while (true) {
+            uint8_t current = data[i] >> SHIFT;
+            uint8_t length = 1 + (data[i++] & MASK);
+            if (loc >= length) [[likely]] {
+                loc -= length;
+                counts[current] += length;
+            } else {
+                counts[current] += loc;
+                return;
+            }
+        }
+    }
+
+    template <class vec>
+    void interval_statistics(uint32_t start, uint32_t end, vec& s_counts, vec& e_counts) {
+        end -= start;
+        const uint16_t SHIFT = 8 - alphabet_type::width;
+        const uint16_t LIMIT = uint16_t(1) << SHIFT;
+        const uint16_t MASK = LIMIT - 1;
+        const uint8_t* data = reinterpret_cast<const uint8_t*>(this);
+        uint32_t i = 0;
+        while (true) {
+            uint8_t current = data[i] >> SHIFT;
+            uint8_t length = 1 + (data[i++] & MASK);
+            if (start >= length) [[likely]] {
+                start -= length;
+                s_counts[current] += length;
+                e_counts[current] += length;
+            } else {
+                s_counts[current] += start;
+                if (start + end <= length) {
+                    e_counts[current] += start + end;
+                    return;
+                }
+                e_counts[current] += length;
+                break;
+            }
+        }
+        while (true) {
+            uint8_t current = data[i] >> SHIFT;
+            uint8_t length = 1 + (data[i++] & MASK);
+            if (end >= length) [[likely]] {
+                end -= length;
+                e_counts[current] += length;
+            } else {
+                e_counts[current] += end;
+                return;
+            }
+        }
+    }
+
     uint32_t select(uint32_t x, uint8_t c) const {
+        const uint8_t* data = reinterpret_cast<const uint8_t*>(this);
         const uint16_t SHIFT = 8 - alphabet_type::width;
         const uint16_t LIMIT = uint16_t(1) << SHIFT;
         const uint16_t MASK = LIMIT - 1;

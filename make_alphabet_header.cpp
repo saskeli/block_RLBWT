@@ -86,6 +86,7 @@ void output_exact(std::vector<std::pair<uint64_t, uint8_t>>& counts) {
 
     std::cout << "#pragma once\n\n"
               << "#include <cstdint>\n"
+              << "#include <cstring>\n"
               << "#include <utility>\n"
               << "#include <endian.h>\n\n"
               << "namespace bbwt {\n"
@@ -166,7 +167,7 @@ void output_exact(std::vector<std::pair<uint64_t, uint8_t>>& counts) {
               << "    static constexpr uint16_t size() {\n"
               << "        return sizeof(custom_alphabet);\n"
               << "    }\n"
-              << "    static constexpr uint16_t elemss() {\n"
+              << "    static constexpr uint16_t elems() {\n"
               << "        return " << counts.size() << ";\n"
               << "    }\n"
               << "    template <class o_t>\n"

@@ -62,6 +62,47 @@ class super_block {
         return res;
     }
 
+    template <class vec>
+    void c_rank(uint32_t loc, vec& counts) const {
+        uint32_t block_i = loc / cap;
+        __builtin_prefetch(data() + offsets_[block_i]);
+        const alphabet_type* alpha = reinterpret_cast<const alphabet_type*>(
+            data() + offsets_[block_i] - alphabet_type::size());
+        const block_type* block = reinterpret_cast<const block_type*>(data() + offsets_[block_i]);
+        for (uint16_t i = 0; i < alphabet_type::elemes(); ++i) {
+            counts[i] += alpha->p_sum(i);
+        }
+        block->c_rank(loc % cap, counts);
+    }
+
+    template <class vec>
+    void interval_statistics(uint32_t start, uint32_t end, vec& s_counts, vec& e_counts) {
+        uint32_t s_block_i = start / cap;
+        uint32_t e_block_i = end / cap;
+        __builtin_prefetch(data() + offsets_[s_block_i]);
+        const alphabet_type* alpha = reinterpret_cast<const alphabet_type*>(data() + offsets_[s_block_i] - alphabet_type::size());
+        const block_type* block = reinterpret_cast<const block_type*>(data() + offsets_[s_block_i]);
+        if (s_block_i == e_block_i) {
+            for (uint16_t i = 0; i < alphabet_type::elems(); ++i) {
+                s_counts[i] += alpha->p_sum(i);
+                e_counts[i] += alpha->p_sum(i);
+            }
+            block->interval_statistics(start % cap, end % cap, s_counts, e_counts);
+        } else {
+            __builtin_prefetch(data() + offsets_[e_block_i]);
+            for (uint16_t i = 0; i < alphabet_type::elems(); ++i) {
+                s_counts[i] += alpha->p_sum(i);
+            }
+            block->c_rank(start % cap, s_counts);
+            alpha = reinterpret_cast<const alphabet_type*>(data() + offsets_[e_block_i] - alphabet_type::size());
+            for (uint16_t i = 0; i < alphabet_type::elems(); ++i) {
+                e_counts[i] += alpha->p_sum(i);
+            }
+            block = reinterpret_cast<const block_type*>(data() + offsets_[e_block_i]);
+            block->c_rank(end % cap, e_counts);
+        }
+    }
+
     uint32_t select(uint64_t x, uint8_t c, uint64_t size) const {
         uint32_t a = 0;
         uint32_t b = size / cap;

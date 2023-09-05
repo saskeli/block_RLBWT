@@ -151,14 +151,14 @@ class run_rlbwt {
     typedef run_rlbwt_builder<run_rlbwt> builder;
 
     struct Char_stats {
-        uint64_t count;
-        uint64_t first_head;
+        uint64_t start_rank;
+        uint64_t end_rank;
         uint8_t c;
     };
 
    private:
-    static std::vector<uint64_t> scratch;
-    static std::vector<uint64_t> scratch_b;
+    inline static std::vector<uint64_t> scratch;
+    inline static std::vector<uint64_t> scratch_b;
 
     uint64_t size_;
     uint64_t block_count_;
@@ -293,34 +293,62 @@ class run_rlbwt {
 
     uint64_t i_rank(uint64_t i, uint8_t& c) const {
         std::fill(scratch.begin(), scratch.end(), 0);
+        ++i;
         auto count = f_index ? b_h_.find(i, skips[i / f_index]) : b_h_.find(i);
         i -= count.first;
         uint64_t res = reinterpret_cast<const block_type*>(data_ + count.second)->i_rank(c, i, scratch);
         res += reinterpret_cast<const alphabet_type*>(data_ + count.second - alphabet_type::size())->p_sum(c);
+        c = alphabet_type::revert(c);
         return res;
     }
 
-    std::vector<Char_stats> intervall_statistics(uint64_t start, uint64_t end) const {
-        std::fill(scratch.begin(), scratch.end(), 0);
-        std::fill(scratch_b.begin(), scratch_b.end(), 0);
-        auto s_count = f_index ? b_h_.find(start, skips[start / f_index]) : b_h_.find(start);
-        auto e_count = f_index ? b_h_.find(end, skips[end / f_index]) : b_h_.find(end);
-        if (s_count.second == e_count.second) {
-            const block_type* block = reinterpret_cast<const block_type*>(data_ + s_count.second);
-            block->intervall_statistics(start - s_count.first, end - s_count.first, scratch, scratch_b);
-        } else {
-            const block_type* block = reinterpret_cast<const block_type*>(data_ + e_count.second);
-            const alphabet_type* alpha = reinterpret_cast<const alphabet_type*>(data_ + e_count.second - alphabet_type::size());
+    std::vector<Char_stats> interval_symbols(uint64_t start, uint64_t end) const {
+        calculate_interval(start, end);
+        std::vector<Char_stats> stats;
+        for (uint16_t i = 0; i < alphabet_type::elems(); ++i) {
+            if (scratch_b[i] > scratch[i]) {
+                stats.push_back({scratch[i], scratch_b[i], alphabet_type::revert(i)});
+            }
+        }
+        return stats;
+    }
+
+    template <class c_vec, class i_vec>
+    void interval_symbols(uint64_t start, uint64_t end, uint8_t& k, c_vec& cs, i_vec& rank_c_i, i_vec& rank_c_j) {
+        calculate_interval(start, end);
+        cs.clear();
+        rank_c_i.clear();
+        rank_c_j.clear();
+        for (uint16_t i = 0; i < alphabet_type::elems(); ++i) {
+            if (scratch_b[i] > scratch[i]) {
+                cs.push_back(alphabet_type::revert(i));
+                rank_c_i.push_back(scratch[i]);
+                rank_c_j.push_back(scratch_b[i]);
+            }
         }
     }
 
     uint64_t select(uint64_t i, uint8_t c) const {
+        c = alphabet_type::convert(c);
         uint64_t a_l = 0;
         auto a = f_index ? b_h_.find(a_l, skips[a_l]) : b_h_.find(a_l);
         uint64_t b_l = size_ - 1;
         auto b = f_index ? b_h_.find(b_l, skips[b_l / f_index]) : b_h_.find(b_l);
-        uint64_t m_l = (b_l + 1) / 2;
-        auto m = f_index ? b_h_.find(m_l, skips[m_l / f_index]) : b_h_.find(m_l);
+        while (a.first < b.first) {
+            uint64_t m_l = (a_l + b_l + 1) / 2;
+            auto m = f_index ? b_h_.find(m_l, skips[m_l / f_index]) : b_h_.find(m_l);
+            const alphabet_type* alpha = reinterpret_cast<const alphabet_type*>(data_ + m.second - alphabet_type::size());
+            if (alpha->p_sum(c) >= i) {
+                b_l = m_l - 1;
+                b = f_index ? b_h_.find(b_l, skips[a_l]) : b_h_.find(b_l);
+            } else {
+                a_l = m_l;
+                a = f_index ? b_h_.find(a_l, skips[a_l / f_index]) : b_h_.find(a_l);
+            }
+        }
+        const alphabet_type* alpha = reinterpret_cast<const alphabet_type*>(data_ + a.second - alphabet_type::size());
+        const block_type* block = reinterpret_cast<const block_type*>(data_ + a.second);
+        return a.first + block->select(i - alpha->p_sum(c), c);
     }
 
     uint8_t operator[](size_t i) const {
@@ -335,6 +363,47 @@ class run_rlbwt {
             skips.push_back(b_h_.short_cut(i, i + f_index));
         }
         bytes_ += skips.size() + sizeof(std::pair<uint64_t, uint64_t>);
+    }
+
+    void calculate_interval(uint64_t start, uint64_t end) const {
+        std::fill(scratch.begin(), scratch.end(), 0);
+        std::fill(scratch_b.begin(), scratch_b.end(), 0);
+        auto s_count = f_index ? b_h_.find(start, skips[start / f_index]) : b_h_.find(start);
+        if (end >= size_) {
+            for (uint16_t i = 0; i < alphabet_type::elems(); ++i) {
+                scratch_b[i] = char_counts_[alphabet_type::revert(i)];
+            }
+            const block_type* block = reinterpret_cast<const block_type*>(data_ + s_count.second);
+            const alphabet_type* alpha = reinterpret_cast<const alphabet_type*>(data_ + s_count.second - alphabet_type::size());
+            for (uint16_t i = 0; i < alphabet_type::elems(); ++i) {
+                scratch[i] = alpha->p_sum(i);
+            }
+            block->c_rank(start - s_count.first, scratch);
+            return;
+        }
+        auto e_count = f_index ? b_h_.find(end, skips[end / f_index]) : b_h_.find(end);
+        if (s_count.second == e_count.second) {
+            const block_type* block = reinterpret_cast<const block_type*>(data_ + s_count.second);
+            const alphabet_type* alpha = reinterpret_cast<const alphabet_type*>(data_ + s_count.second - alphabet_type::size());
+            for (uint16_t i = 0; i < alphabet_type::elems(); ++i) {
+                scratch[i] = alpha->p_sum(i);
+                scratch_b[i] = alpha->p_sum(i);
+            }
+            block->interval_statistics(start - s_count.first, end - s_count.first, scratch, scratch_b);
+        } else {
+            const block_type* block = reinterpret_cast<const block_type*>(data_ + s_count.second);
+            const alphabet_type* alpha = reinterpret_cast<const alphabet_type*>(data_ + s_count.second - alphabet_type::size());
+            for (uint16_t i = 0; i < alphabet_type::elems(); ++i) {
+                scratch[i] = alpha->p_sum(i);
+            }
+            block->c_rank(start - s_count.first, scratch);
+            alpha = reinterpret_cast<const alphabet_type*>(data_ + e_count.second - alphabet_type::size());
+            block = reinterpret_cast<const block_type*>(data_ + e_count.second);
+            for (uint16_t i = 0; i < alphabet_type::elems(); ++i) {
+                scratch_b[i] = alpha->p_sum(i);
+            }
+            block->c_rank(end - e_count.first, scratch_b);
+        }
     }
 };
 }  // namespace bbwt

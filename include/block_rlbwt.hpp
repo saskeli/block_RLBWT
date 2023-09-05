@@ -256,10 +256,16 @@ class block_rlbwt {
     typedef alphabet_type_ alphabet_type;
     typedef block_rlbwt_builder<block_rlbwt> builder;
 
+    struct Char_stats {
+        uint64_t start_rank;
+        uint64_t end_rank;
+        uint8_t c;
+    };
+
    private:
     static const constexpr uint64_t SUPER_BLOCK_ELEMS = uint64_t(1) << 32;
-    static std::vector<uint64_t> scratch;
-    static std::vector<uint64_t> scratch_b;
+    inline static std::vector<uint64_t> scratch;
+    inline static std::vector<uint64_t> scratch_b;
     uint64_t size_;
     uint64_t block_count_;
     uint64_t bytes_;
@@ -288,6 +294,7 @@ class block_rlbwt {
         bytes_ += block_type::load_statics(in_file);
         if (scratch.size() < alphabet_type::elems()) {
             scratch.resize(alphabet_type::elems());
+            scratch_b.resize(alphabet_type::elems());
         }
         uint64_t data_bytes;
         in_file.read(reinterpret_cast<char*>(&data_bytes), sizeof(uint64_t));
@@ -409,12 +416,38 @@ class block_rlbwt {
         return res;
     }
 
+    std::vector<Char_stats> interval_symbols(uint64_t start, uint64_t end) const {
+        calculate_interval(start, end);
+        std::vector<Char_stats> stats;
+        for (uint16_t i = 0; i < alphabet_type::elems(); ++i) {
+            if (scratch_b[i] > scratch[i]) {
+                stats.push_back({scratch[i], scratch_b[i], alphabet_type::revert(i)});
+            }
+        }
+        return stats;
+    }
+
+    template <class c_vec, class i_vec>
+    void interval_symbols(uint64_t start, uint64_t end, uint8_t& k, c_vec& cs, i_vec& rank_c_i, i_vec& rank_c_j) {
+        calculate_interval(start, end);
+        cs.clear();
+        rank_c_i.clear();
+        rank_c_j.clear();
+        for (uint16_t i = 0; i < alphabet_type::elems(); ++i) {
+            if (scratch_b[i] > scratch[i]) {
+                cs.push_back(alphabet_type::revert(i));
+                rank_c_i.push_back(scratch[i]);
+                rank_c_j.push_back(scratch_b[i]);
+            }
+        }
+    }
+
     uint64_t select(uint64_t x, uint8_t c) const {
         c = alphabet_type::convert(c);
         uint64_t s_b_count = size_ / SUPER_BLOCK_ELEMS;
         uint64_t l_ps = 0;
         uint64_t sb_trg = 0;
-        for (uint64_t sb_idx = 1; i < s_b_count; ++i) {
+        for (uint64_t sb_idx = 1; sb_idx < s_b_count; ++sb_idx) {
             uint64_t ps = reinterpret_cast<alphabet_type*>(p_sums_ + alphabet_type::size() * sb_idx)->p_sum(c);
             if (ps > x) {
                 break;
@@ -457,6 +490,35 @@ class block_rlbwt {
         in_file.read(reinterpret_cast<char*>(data), in_bytes);
         bytes_ += in_bytes;
         return reinterpret_cast<super_block_type*>(data);
+    }
+
+    void calculate_interval(uint64_t start, uint64_t end) {
+        std::fill(scratch.begin(), scratch.end(), 0);
+        std::fill(scratch_b.begin(), scratch_b.end(), 0);
+
+
+        uint64_t s_block_i = start / SUPER_BLOCK_ELEMS;
+        uint64_t e_block_i = end / SUPER_BLOCK_ELEMS;
+        if (s_block_i == e_block_i) {
+            const alphabet_type* alpha = reinterpret_cast<alphabet_type*>(p_sums_ + alphabet_type::size() * s_block_i);
+            for (uint16_t i = 0; i < alphabet_type::elems(); ++i) {
+                scratch[i] = alpha->p_sum(i);
+                scratch_b[i] = alpha->p_sum(i);
+            }
+            s_blocks_[s_block_i]->interval_statistics(start % SUPER_BLOCK_ELEMS, end % SUPER_BLOCK_ELEMS, scratch, scratch_b);
+        } else {
+            const alphabet_type* alpha = reinterpret_cast<alphabet_type*>(p_sums_ + alphabet_type::size() * s_block_i);
+            for (uint16_t i = 0; i < alphabet_type::elems(); ++i) {
+                scratch[i] = alpha->p_sum(i);
+            }
+            s_blocks_[s_block_i]->c_rank(start % SUPER_BLOCK_ELEMS, scratch);
+
+            alpha = reinterpret_cast<alphabet_type*>(p_sums_ + alphabet_type::size() * e_block_i);
+            for (uint16_t i = 0; i < alphabet_type::elems(); ++i) {
+                scratch_b[i] = alpha->p_sum(i);
+            }
+            s_blocks_[e_block_i]->c_rank(end % SUPER_BLOCK_ELEMS, scratch_b);
+        }
     }
 };
 }  // namespace bbwt
