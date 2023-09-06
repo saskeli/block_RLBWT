@@ -408,6 +408,7 @@ class block_rlbwt {
     }
 
     uint64_t i_rank(u_int64_t i, uint8_t& c) const {
+        ++i;
         uint64_t s_block_i = i / SUPER_BLOCK_ELEMS;
         std::fill(scratch.begin(), scratch.end(), 0);
         uint64_t res = s_blocks_[s_block_i]->i_rank(c, i % SUPER_BLOCK_ELEMS, scratch);
@@ -428,7 +429,7 @@ class block_rlbwt {
     }
 
     template <class c_vec, class i_vec>
-    void interval_symbols(uint64_t start, uint64_t end, uint8_t& k, c_vec& cs, i_vec& rank_c_i, i_vec& rank_c_j) {
+    void interval_symbols(uint64_t start, uint64_t end, uint8_t& k, c_vec& cs, i_vec& rank_c_i, i_vec& rank_c_j) const {
         calculate_interval(start, end);
         cs.clear();
         rank_c_i.clear();
@@ -492,7 +493,7 @@ class block_rlbwt {
         return reinterpret_cast<super_block_type*>(data);
     }
 
-    void calculate_interval(uint64_t start, uint64_t end) {
+    void calculate_interval(uint64_t start, uint64_t end) const {
         std::fill(scratch.begin(), scratch.end(), 0);
         std::fill(scratch_b.begin(), scratch_b.end(), 0);
 

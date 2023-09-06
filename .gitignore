@@ -5,6 +5,12 @@
 *.bin
 *.txt
 *.tsv
+*.svg
+*.csv
+*.ipynb
+*.pdf
+*.sh
+*.png
 corpus/
 bwt/
 

@@ -1,28 +1,41 @@
 
-#include <iostream>
 #include <cstdint>
+#include <iostream>
 
+#include "include/block_rlbwt.hpp"
+#include "include/byte_block.hpp"
 #include "include/custom_alphabet.hpp"
-#include "include/vbyte_runs.hpp"
 #include "include/run_rlbwt.hpp"
+#include "include/super_block.hpp"
+#include "include/vbyte_runs.hpp"
 
 #ifndef RUN_COUNT
 #define RUN_COUNT 32
 #endif
 
+#ifndef LARGE_BLOCK_SIZE
+#define LARGE_BLOCK_SIZE 16384
+#endif
+
 /**
  * Assumes that the following has been done given a bwt in "simple.txt" with
  * (A^{1000}C^{1000}G^{1000}T^{1000})^{2500}
- * 
+ *
  *   & make make_alphabet_header
  *   & ./make_alphabet_header -i simple.txt > include/custom_alphabet.hpp
  *   & make make_bwt
  *   & ./make_bwt -i simple.txt -c corpus/simple.runs
- * 
-*/
+ *
+ */
 
-
-typedef bbwt::run_rlbwt<bbwt::vbyte_runs<RUN_COUNT, bbwt::custom_alphabet<uint64_t>>, 0> bwt_t;
+typedef bbwt::run_rlbwt<
+    bbwt::vbyte_runs<RUN_COUNT, bbwt::custom_alphabet<uint64_t>>, 0>
+    bwt_t;
+/*typedef bbwt::block_rlbwt<
+    bbwt::super_block<
+        bbwt::byte_block<LARGE_BLOCK_SIZE, bbwt::custom_alphabet<uint32_t>>>,
+    bbwt::custom_alphabet<uint64_t>>
+    bwt_t;//*/
 
 int main() {
     bwt_t bwt("corpus/simple.runs");
@@ -37,11 +50,11 @@ int main() {
             uint64_t ex = (run / 4) * 1000;
             ex += run_c + 1;
             if (c != alpha[run % 4] || res != ex) {
-                std::cout << "expected i_rank(" << loc << ") = (" 
-                          << alpha[run % 4] << ", " << ex << "), was (" << c << ", " 
-                          << res << ")\n" 
+                std::cout << "expected i_rank(" << loc << ") = ("
+                          << alpha[run % 4] << ", " << ex << "), was (" << c
+                          << ", " << res << ")\n"
                           << "at(" << loc << ") = " << bwt.at(loc) << std::endl;
-                exit(1);             
+                exit(1);
             }
         }
     }
@@ -55,8 +68,8 @@ int main() {
             ex += (x - 1) % 1000;
             ++ex;
             if (res != ex) {
-                std::cout << "expected select(" << x << ", " << alpha[off] << ") = "
-                          << ex << " but was " << res << std::endl;
+                std::cout << "expected select(" << x << ", " << alpha[off]
+                          << ") = " << ex << " but was " << res << std::endl;
                 exit(1);
             }
         }
@@ -64,10 +77,13 @@ int main() {
 
     for (uint64_t end = 0; end < runs * run_lengths; end += 10000) {
         uint64_t start = end / 2;
-        std::cout << "interval_symbols(" << start << ", " << end << "):" << std::endl;
-        // Can also be used like the sdsl function where vector references are fed in for the results.
+        std::cout << "interval_symbols(" << start << ", " << end
+                  << "):" << std::endl;
+        // Can also be used like the sdsl function where vector references are
+        // fed in for the results.
         for (auto s : bwt.interval_symbols(start, end)) {
-            std::cout << "  " << s.c << ", " << s.start_rank << ", " << s.end_rank << std::endl;
+            std::cout << "  " << s.c << ", " << s.start_rank << ", "
+                      << s.end_rank << std::endl;
         }
     }
 }

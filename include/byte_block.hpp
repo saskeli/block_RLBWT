@@ -199,7 +199,7 @@ class byte_block {
     }
 
     template <class vec>
-    void interval_statistics(uint32_t start, uint32_t end, vec& s_counts, vec& e_counts) {
+    void interval_statistics(uint32_t start, uint32_t end, vec& s_counts, vec& e_counts) const {
         uint32_t i = 0;
         end -= start;
         while (true) {

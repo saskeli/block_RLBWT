@@ -69,7 +69,7 @@ class super_block {
         const alphabet_type* alpha = reinterpret_cast<const alphabet_type*>(
             data() + offsets_[block_i] - alphabet_type::size());
         const block_type* block = reinterpret_cast<const block_type*>(data() + offsets_[block_i]);
-        for (uint16_t i = 0; i < alphabet_type::elemes(); ++i) {
+        for (uint16_t i = 0; i < alphabet_type::elems(); ++i) {
             counts[i] += alpha->p_sum(i);
         }
         block->c_rank(loc % cap, counts);
@@ -109,7 +109,7 @@ class super_block {
         while (a < b) {
             uint32_t m = (a + b + 1) / 2;
             uint32_t ps = reinterpret_cast<const alphabet_type*>(data() + offsets_[m] - alphabet_type::size())->p_sum(c);
-            if (ps > x) {
+            if (ps >= x) {
                 b = m - 1;
             } else {
                 a = m;
