@@ -57,7 +57,7 @@ class file_reader {
 
         if_iterator& operator++() {
             head_ = next_head_;
-            if (head_) {
+            if (!stream_->eof()) {
                 length_ = 1;
                 char c;
                 while (stream_->get(c)) {

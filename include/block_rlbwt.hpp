@@ -285,7 +285,7 @@ class block_rlbwt {
         std::fstream in_file;
         in_file.open(path, std::ios::binary | std::ios::in);
         if (in_file.fail()) {
-            std::cerr << " -> Failed" << std::endl;
+            std::cerr << " Failed to open " << path << std::endl;
             exit(1);
         }
         bytes_ += alphabet_type::load_statics(in_file);
@@ -323,7 +323,7 @@ class block_rlbwt {
         }
         in_file.open(prefix + "_data" + suffix, std::ios::binary | std::ios::in);
         if (in_file.fail()) {
-            std::cerr << " -> Failed" << std::endl;
+            std::cerr << " Opening " << prefix << "_data" << suffix << " failed" << std::endl;
             exit(1);
         }
         for (uint64_t i = 1; i <= block_count_; i++) {
@@ -373,19 +373,23 @@ class block_rlbwt {
     }
 
     uint64_t count(const std::string& pattern) const {
+        std::cerr << "Looking for " << pattern << std::endl;
         uint8_t c = pattern[pattern.size() - 1];
         uint64_t a = char_counts_[c];
         uint64_t b = char_counts_[uint16_t(c) + 1];
         uint64_t ret = b  - a;
+        std::cerr << ret << " occurrences of " << c << " starting at " << a << std::endl;
         for (size_t i = pattern.size() - 2; i < pattern.size() && ret > 0; i--) {
             c = pattern[i];
             a = rank(a, c);
             b = rank(b, c);
             ret = b - a;
+            std::cerr << " extended with " << c << " -> " << ret << " occurrences" << std::endl;
             if (ret == 0) [[unlikely]] {
                 break;
             }
             a += char_counts_[c];
+            std::cerr << "\tstarting at " << a << std::endl;
             b += char_counts_[c];
         }
         return ret;
