@@ -357,6 +357,11 @@ class run_rlbwt {
 
     uint64_t size() const { return size_; }
     uint64_t bytes() const { return bytes_; }
+
+    void print() const {
+        std::cerr << "Nothing here but us chickens." << std::endl;
+    }
+
    private:
     void build_f_index() {
         for (uint64_t i = 0; i < size_; i += f_index) {

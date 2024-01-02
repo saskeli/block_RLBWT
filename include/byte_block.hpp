@@ -4,6 +4,7 @@
 #include <iostream>
 #include <utility>
 #include <cstdint>
+#include <bitset>
 
 //#define VERB
 
@@ -39,7 +40,7 @@ class byte_block {
         const uint8_t SHIFT = 8 - alphabet_type::width;
         const uint8_t BYTE_MASK = SHIFT > 0 ? (uint8_t(1) << (SHIFT - 1)) - 1 : 0;
         #ifdef VERB
-        std::cerr << "append(" << head << ", " << length << ")" << std::endl;
+        std::cerr << "append(" << int(head) << ", " << length << ")" << std::endl;
         #endif
         uint64_t* offset = reinterpret_cast<uint64_t*>(scratch[0]);
         uint8_t* data = scratch[1];
@@ -63,10 +64,11 @@ class byte_block {
                 #endif
             }
         } else if (alphabet_type::width == 7) {
-            if (length == 1) {
-                data[offset[0]++] |= length;
+            if (length == 0) {
+                data[offset[0]++] |= uint32_t(1);
                 return offset[0];
             }
+            offset[0]++;
         } if (alphabet_type::width == 8) {
             offset[0]++;
             if constexpr (block_size <= uint32_t(1) << 8) {
@@ -283,7 +285,7 @@ class byte_block {
             uint32_t rl;
             read(i, current, rl);
             rl++;
-            std::cerr << " run " << alphabet_type::revert(current) << ", " << rl << std::endl;
+            std::cerr << " run " << int(alphabet_type::revert(current)) << ", " << rl << std::endl;
             if (sb > rl) [[likely]] {
                 sb -= rl;
             } else {
@@ -303,11 +305,10 @@ class byte_block {
             return get(i, rl, 0);
         } else if (alphabet_type::width == 7) {
             c = data[i] >> 1;
+            rl = 0;
             if (data[i++] & 0b00000001) {
-                rl = 1;
                 return;
             } else {
-                rl = 0;
                 return get(i, rl, 0);
             }
         } else {

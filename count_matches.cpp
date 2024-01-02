@@ -29,6 +29,7 @@ std::pair<double, size_t> bench(const std::string& in_file_path, std::ifstream& 
     using std::chrono::nanoseconds;
 
     bwt_type bwt(in_file_path);
+    //bwt.print();
     bps = 8 * double(bwt.bytes()) / bwt.size();
     double total = 0;
     std::string p;

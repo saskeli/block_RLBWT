@@ -38,7 +38,7 @@ class alphabet {
             in_file.read(reinterpret_cast<char*>(S_map), s);
         } else {
             L_map = (L*)std::malloc(s);
-            elems_ = s / sizeof(S);
+            elems_ = s / sizeof(L);
             in_file.read(reinterpret_cast<char*>(L_map), s);
         }
         return s + 2 * 256 + sizeof(L*) + sizeof(S*) + 1;
@@ -65,9 +65,14 @@ class alphabet {
     }
 
     void print() const {
-        for (uint16_t i = 0; i < 6; i++) {
-            std::cerr << int(revert(i)) << ": " << p_sum(i) << std::endl;
+        std::cerr << "--------------------------->\n";
+        for (uint16_t i = 0; i < elems_; i++) {
+            dtype ps = p_sum(i);
+            if (ps > 0) {
+                std::cerr << int(revert(i)) << ": " << p_sum(i) << "\n";
+            }
         }
+        std::cerr << "<------------------------" << std::endl;
     }
 };
 

@@ -84,7 +84,7 @@ class two_byte_block {
             avx_rank(c, location);
         }
 #endif
-        //std::cerr << "rank(" << int(c) << ", " << location << ")" << std::endl;
+        //std::cerr << "      rank(" << int(c) << ", " << location << ")" << std::endl;
         const uint16_t* data = reinterpret_cast<const uint16_t*>(this);
         const uint16_t SHIFT = 16 - alphabet_type::width;
         const uint16_t LIMIT = uint16_t(1) << SHIFT;
@@ -94,14 +94,14 @@ class two_byte_block {
         while (true) {
             uint8_t current = data[i] >> SHIFT;
             uint16_t length = 1 + (data[i++] & MASK);
-            //std::cerr << " run " << int(current) << ", " << length << std::endl;
+            //std::cerr << "       run " << int(current) << ", " << length << std::endl;
             if (location >= length) [[likely]] {
                 location -= length;
                 res += current == c ? length : 0;
-                //std::cerr << "  " << location << " left, with " << res << " seen." << std::endl;
+                //std::cerr << "        " << location << " left, with " << res << " seen." << std::endl;
             } else {
                 res += current == c ? location : 0;
-                //std::cerr << "  done, with " << res << " seen." << std::endl;
+                //std::cerr << "        done, with " << res << " seen." << std::endl;
                 return res;
             }
         }
@@ -234,7 +234,7 @@ class two_byte_block {
             if (sb > length) [[likely]] {
                 sb -= length;
             } else {
-                return;
+                break;
             }
         }
     }

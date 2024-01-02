@@ -373,23 +373,23 @@ class block_rlbwt {
     }
 
     uint64_t count(const std::string& pattern) const {
-        std::cerr << "Looking for " << pattern << std::endl;
+        //std::cerr << "Looking for " << pattern << std::endl;
         uint8_t c = pattern[pattern.size() - 1];
         uint64_t a = char_counts_[c];
         uint64_t b = char_counts_[uint16_t(c) + 1];
         uint64_t ret = b  - a;
-        std::cerr << ret << " occurrences of " << c << " starting at " << a << std::endl;
+        //std::cerr << ret << " occurrences of " << c << " starting at " << a << std::endl;
         for (size_t i = pattern.size() - 2; i < pattern.size() && ret > 0; i--) {
             c = pattern[i];
             a = rank(a, c);
             b = rank(b, c);
             ret = b - a;
-            std::cerr << " extended with " << c << " -> " << ret << " occurrences" << std::endl;
+            //std::cerr << " extended with " << c << " -> " << ret << " occurrences" << std::endl;
             if (ret == 0) [[unlikely]] {
                 break;
             }
             a += char_counts_[c];
-            std::cerr << "\tstarting at " << a << std::endl;
+            //std::cerr << "\tstarting at " << a << std::endl;
             b += char_counts_[c];
         }
         return ret;
@@ -401,13 +401,16 @@ class block_rlbwt {
     }
 
     uint64_t rank(uint64_t i, uint8_t c) const {
+        //std::cerr << "  rank(" << i << ", " << c << ")" << std::endl;
         c = alphabet_type::convert(c);
         if (i >= size_) [[unlikely]] {
             return reinterpret_cast<alphabet_type*>(p_sums_ + alphabet_type::size() * block_count_)->p_sum(c);
         }
         uint64_t s_block_i = i / SUPER_BLOCK_ELEMS;
         uint64_t res = reinterpret_cast<alphabet_type*>(p_sums_ + alphabet_type::size() * s_block_i)->p_sum(c);
+        //std::cerr << "    s_block offset: " << res << std::endl;
         res += s_blocks_[s_block_i]->rank(c, i % SUPER_BLOCK_ELEMS);
+        //std::cerr << "    with s_block rank: " << res << std::endl;
         return res;
     }
 
@@ -479,7 +482,7 @@ class block_rlbwt {
             uint64_t s = (i + 1) * SUPER_BLOCK_ELEMS;
             s = s > size_ ? size_ % SUPER_BLOCK_ELEMS : SUPER_BLOCK_ELEMS;
             std::cerr << "S block " << i << ":" << std::endl;
-            reinterpret_cast<alphabet_type*>(p_sums_ * alphabet_type::size() * i)->print();
+            reinterpret_cast<alphabet_type*>(p_sums_ + alphabet_type::size() * i)->print();
             s_blocks_[i]->print(s);
         }
     }

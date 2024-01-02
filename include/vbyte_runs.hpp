@@ -221,7 +221,7 @@ class vbyte_runs {
             uint32_t rl;
             read(i, current, rl);
             rl++;
-            std::cerr << " run " << alphabet_type::revert(current) << ", " << rl << std::endl;
+            std::cerr << " run " << int(alphabet_type::revert(current)) << ", " << rl << std::endl;
             if (rl < syms) {
                 syms -= rl;
             } else {
