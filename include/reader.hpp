@@ -17,6 +17,7 @@ class file_reader {
     class if_iterator {
        private:
         std::istream* stream_;
+        bool eof_ = false;
 
        public:
         uint32_t length_;
@@ -26,13 +27,14 @@ class file_reader {
         uint8_t next_head_;
 
        public:
-        if_iterator(uint8_t head, std::istream* stream)
-            : stream_(stream), length_(head ? 1 : 0), head_(head) {
-            if (head) {
+        if_iterator(uint8_t head, std::istream* stream, bool eof = false)
+            : stream_(stream), eof_(eof), length_(head ? 1 : 0), head_(head) {
+            if (!eof) {
                 char c;
                 while (stream_->read(&c, 1)) {
                     if (stream_->eof()) {
                         next_head_ = '\0';
+                        eof_ = true;
                         break;
                     }
                     if (alphabet_type::convert(c) == alphabet_type::convert(head_)) {
@@ -48,7 +50,7 @@ class file_reader {
         }
 
         bool operator==(const if_iterator& rhs) const {
-            return head_ == rhs.head_ && length_ == rhs.length_;
+            return head_ == rhs.head_ && length_ == rhs.length_ && eof_ == rhs.eof_;
         }
 
         bool operator!=(const if_iterator& rhs) const {
@@ -57,7 +59,7 @@ class file_reader {
 
         if_iterator& operator++() {
             head_ = next_head_;
-            if (head_) {
+            if (!stream_->eof()) {
                 length_ = 1;
                 char c;
                 while (stream_->get(c)) {
@@ -68,10 +70,8 @@ class file_reader {
                         break;
                     }
                 }
-                if (stream_->eof()) {
-                    next_head_ = '\0';
-                }
             } else {
+                next_head_ = '\0';
                 length_ = 0;
             }
             return *this;
